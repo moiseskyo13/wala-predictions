@@ -163,9 +163,9 @@ document.querySelector('#app').innerHTML = `
       </div>
 
       <div class="notice-modal-footer">
-        <button id="claimNoticeConfirmBtn" class="launch" type="button">
-          Entendi
-        </button>
+        <button id="claimNoticeConfirmBtn" class="notice-confirm-btn" type="button">
+  Entendi
+</button>
       </div>
     </div>
   </div>

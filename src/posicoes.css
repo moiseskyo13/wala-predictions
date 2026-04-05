@@ -531,3 +531,46 @@ input {
     font-size:13px;
   }
 }
+
+
+.notice-confirm-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  font-size:14px;
+  background:linear-gradient(90deg,#5cffb4,#25ff8a);
+  color:#000;
+  cursor:pointer;
+  transition:0.18s ease;
+}
+
+.notice-confirm-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(37,255,138,0.16);
+}
+
+.notice-confirm-btn:active{
+  transform:scale(0.99);
+}
+
+.notice-confirm-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.modal-close{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#11151e;
+  color:#fff;
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
