@@ -1,0 +1,27 @@
+{
+  "name": "wala-predictions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server.mjs",
+"start:local": "node --env-file=.env server.mjs",
+    "preview": "vite preview",
+    "keeper": "node scripts/keeper-resolve.js",
+    "keeper:resolve": "node scripts/keeper-resolve.js"
+  },
+  "devDependencies": {
+    "vite": "^8.0.1",
+    "vite-plugin-node-polyfills": "^0.26.0"
+  },
+  "dependencies": {
+    "@anchor-lang/core": "^1.0.0",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.3",
+    "buffer": "^6.0.3",
+    "express": "^5.2.1"
+  }
+}
