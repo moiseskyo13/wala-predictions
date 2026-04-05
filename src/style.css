@@ -946,3 +946,393 @@ h1,h2,h3,p,span,label,div,strong{
     text-align:left;
   }
 }
+
+@media (min-width:981px){
+  body{
+    padding:32px 0 60px;
+    background:
+      radial-gradient(circle at top center, rgba(37,255,138,0.08), transparent 30%),
+      linear-gradient(180deg, #0b0d13 0%, #0f1118 45%, #090b11 100%);
+  }
+
+  .container{
+    width:min(1180px, calc(100vw - 64px));
+    max-width:min(1180px, calc(100vw - 64px));
+    padding:0;
+  }
+
+  .topbar{
+    margin-bottom:34px;
+    padding:0 4px;
+  }
+
+  .connect{
+    height:44px;
+    padding:0 18px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 10px 24px rgba(0,0,0,0.22);
+  }
+
+  .card{
+    padding:28px;
+    border-radius:22px;
+    margin-bottom:28px;
+    background:
+      linear-gradient(180deg, rgba(20,24,34,0.88) 0%, rgba(11,15,24,0.92) 100%);
+    border:1px solid rgba(255,255,255,0.07);
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.34),
+      0 0 0 1px rgba(255,255,255,0.02) inset,
+      0 0 40px rgba(37,255,138,0.04);
+  }
+
+  .title{
+    font-size:34px;
+    line-height:1.08;
+    letter-spacing:-0.02em;
+    margin-bottom:12px;
+  }
+
+  .wallet-subtitle{
+    font-size:15px;
+    max-width:760px;
+    color:#aab2bc;
+    margin-bottom:22px;
+  }
+
+  .input{
+    height:52px;
+    padding:0 16px;
+    border-radius:14px;
+    font-size:15px;
+    background:#0c1018;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+
+  .section-head{
+    margin-bottom:20px;
+  }
+
+  .section-head h3{
+    font-size:22px;
+    letter-spacing:-0.01em;
+  }
+
+  .section-count{
+    min-width:40px;
+    height:40px;
+    font-size:15px;
+  }
+
+  .match-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:18px;
+  }
+
+  .match-card{
+    padding:18px;
+    border-radius:20px;
+    background:
+      linear-gradient(180deg, rgba(17,22,31,0.96) 0%, rgba(11,15,24,0.98) 100%);
+    border:1px solid rgba(255,255,255,0.07);
+    box-shadow:
+      0 16px 34px rgba(0,0,0,0.25),
+      0 0 0 1px rgba(255,255,255,0.02) inset;
+    transition:transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .match-card:hover{
+    transform:translateY(-3px);
+    border-color:rgba(37,255,138,0.16);
+    box-shadow:
+      0 22px 42px rgba(0,0,0,0.32),
+      0 0 0 1px rgba(37,255,138,0.05) inset,
+      0 0 24px rgba(37,255,138,0.06);
+  }
+
+  .match-top{
+    margin-bottom:16px;
+  }
+
+  .match-league{
+    padding:7px 12px;
+    font-size:11px;
+    letter-spacing:0.04em;
+  }
+
+  .match-title{
+    font-size:18px;
+    line-height:1.35;
+  }
+
+  .match-time{
+    font-size:13px;
+    margin-top:8px;
+  }
+
+  .stats-grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .stat-box,
+  .wallet-stat-box{
+    min-height:82px;
+    padding:14px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.025);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  .stat-label,
+  .wallet-stat-label,
+  .mint-label{
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:#7f8994;
+  }
+
+  .stat-value,
+  .wallet-stat-value{
+    font-size:15px;
+    margin-top:4px;
+  }
+
+  .mint-box{
+    padding:16px;
+    border-radius:16px;
+    margin-bottom:14px;
+    background:#0c1018;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  #marketMintText{
+    font-size:13px;
+    color:#cfd6de;
+  }
+
+  .empty-state{
+    padding:18px;
+    border-radius:16px;
+    font-size:15px;
+  }
+
+  .trade,
+  .launch{
+    min-height:46px;
+    border-radius:12px;
+    font-size:14px;
+  }
+
+  .launch{
+    padding:0 18px;
+  }
+
+  .trade{
+    padding:0 16px;
+  }
+
+  .bet-panel{
+    margin-top:14px;
+    padding:14px;
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(16,21,30,0.95) 0%, rgba(12,16,24,0.98) 100%);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  .bet-top{
+    margin-bottom:12px;
+  }
+
+  .selected-outcome-chip{
+    min-height:34px;
+    padding:0 14px;
+    font-size:12px;
+  }
+
+  .estimated-payout-text{
+    font-size:13px;
+  }
+
+  .bet-amount-input{
+    margin-bottom:12px;
+  }
+
+  .bet-hint-text{
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .confirm-bet-btn{
+    min-height:48px;
+    border-radius:12px;
+  }
+
+  .inline-market-card{
+    padding:20px;
+    border-radius:20px;
+  }
+
+  .inline-market-card .inline-stats-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:10px;
+    margin-bottom:12px;
+  }
+
+  .side-menu,
+  .wallet-menu{
+    width:320px;
+    right:-320px;
+    background:rgba(10,13,20,0.96);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-left:1px solid rgba(255,255,255,0.08);
+  }
+
+  .side-menu a,
+  .wallet-menu a{
+    font-size:15px;
+    padding:20px 28px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+}
+
+@media (min-width:1280px){
+  .container{
+    width:min(1380px, calc(100vw - 80px));
+    max-width:min(1380px, calc(100vw - 80px));
+  }
+
+  .topbar{
+    margin-bottom:40px;
+  }
+
+  .card{
+    padding:30px;
+    border-radius:24px;
+  }
+
+  .card:first-of-type{
+    padding:34px;
+  }
+
+  .title{
+    font-size:38px;
+    margin-bottom:14px;
+  }
+
+  .wallet-subtitle{
+    font-size:16px;
+    max-width:900px;
+  }
+
+  .section-head h3{
+    font-size:24px;
+  }
+
+  .match-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:20px;
+  }
+
+  .match-card{
+    padding:20px;
+    border-radius:22px;
+  }
+
+  .match-title{
+    font-size:19px;
+  }
+
+  .match-time{
+    font-size:14px;
+  }
+
+  .stats-grid{
+    gap:12px;
+  }
+
+  .stat-box,
+  .wallet-stat-box{
+    padding:15px;
+    border-radius:15px;
+  }
+
+  .stat-value,
+  .wallet-stat-value{
+    font-size:15px;
+  }
+
+  .mint-box{
+    border-radius:18px;
+    padding:18px;
+  }
+
+  .inline-market-card{
+    padding:22px;
+    border-radius:22px;
+  }
+
+  .inline-market-card .inline-stats-grid{
+    gap:12px;
+  }
+
+  .bet-panel{
+    padding:16px;
+    border-radius:18px;
+  }
+
+  .trade,
+  .launch,
+  .confirm-bet-btn{
+    min-height:48px;
+    font-size:14px;
+    border-radius:12px;
+  }
+
+  .side-menu,
+  .wallet-menu{
+    width:340px;
+    right:-340px;
+  }
+}
+
+@media (min-width:1536px){
+  .container{
+    width:min(1520px, calc(100vw - 96px));
+    max-width:min(1520px, calc(100vw - 96px));
+  }
+
+  .match-grid{
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:22px;
+  }
+
+  .card:first-of-type{
+    padding:38px;
+  }
+
+  .title{
+    font-size:42px;
+  }
+
+  .wallet-subtitle{
+    font-size:17px;
+  }
+
+  .match-card{
+    padding:22px;
+  }
+
+  .match-title{
+    font-size:20px;
+  }
+
+  .section-head{
+    margin-bottom:22px;
+  }
+}
