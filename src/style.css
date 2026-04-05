@@ -378,10 +378,11 @@ button{
   display:none;
   align-items:center;
   justify-content:center;
-  padding:20px 12px;
+  padding:0;
   z-index:1100;
-  overflow-y:auto;
+  overflow:hidden;
   -webkit-overflow-scrolling:touch;
+  background:#0f0f17;
 }
 
 .custom-modal.active{
@@ -390,13 +391,13 @@ button{
 
 .modal-card{
   width:100%;
-  max-width:360px;
+  max-width:420px;
   margin-bottom:0;
   position:relative;
   z-index:1101;
   padding:16px;
   border-radius:18px;
-  max-height:calc(100vh - 24px);
+  max-height:100vh;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
 }
@@ -659,19 +660,32 @@ h1,h2,h3,p,span,label,div,strong{
   }
 
   .custom-modal{
-    align-items:flex-start;
-    padding:10px;
+    align-items:stretch;
+    justify-content:stretch;
+    padding:0;
+    background:#0f0f17;
   }
 
   .modal-card{
+    width:100%;
     max-width:100%;
-    padding:12px;
-    border-radius:16px;
-    max-height:calc(100vh - 20px);
+    height:100vh;
+    max-height:100vh;
+    margin:0;
+    padding:14px;
+    border-radius:0;
+    border:none;
+    box-shadow:none;
+    background:#0f0f17;
     overflow-y:auto;
   }
 
   .modal-header{
+    position:sticky;
+    top:0;
+    z-index:5;
+    background:#0f0f17;
+    padding-bottom:10px;
     margin-bottom:10px;
   }
 
