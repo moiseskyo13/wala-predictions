@@ -947,7 +947,7 @@ h1,h2,h3,p,span,label,div,strong{
   }
 }
 
-@media (min-width:1200px){
+@media (min-width:1000px){
   body{
     padding:32px 0 60px;
     background:#0f0f17;
@@ -1331,30 +1331,5 @@ h1,h2,h3,p,span,label,div,strong{
 
   .section-head{
     margin-bottom:22px;
-  }
-}
-
-html,
-body{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden;
-}
-@media (min-width:481px) and (max-width:1199px){
-  body{
-    padding:20px 0 40px;
-    background:#0f0f17;
-  }
-
-  .container{
-    width:420px;
-    max-width:calc(100vw - 24px);
-    padding:20px;
-  }
-
-  .match-grid{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
   }
 }
