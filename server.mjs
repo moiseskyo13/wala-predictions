@@ -11,7 +11,7 @@ const distPath = path.join(__dirname, 'dist')
 
 app.use('/api/football-data/v4', async (req, res) => {
   try {
-    const apiKey = process.env.FOOTBALL_DATA_TOKEN
+    const apiKey = process.env.FOOTBALL_DATA_TOKEN?.trim()
 
     if (!apiKey) {
       return res.status(500).json({
@@ -63,4 +63,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server rodando na porta ${PORT}`)
+  console.log('FOOTBALL_DATA_TOKEN carregado:', !!process.env.FOOTBALL_DATA_TOKEN)
 })
