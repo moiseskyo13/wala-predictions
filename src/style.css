@@ -1575,3 +1575,10 @@ svg{
 ::selection{
   background:transparent;
 }
+
+
+html,
+body{
+  background:#000 !important;
+  color-scheme:dark;
+}

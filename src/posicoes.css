@@ -574,3 +574,9 @@ input {
   align-items:center;
   justify-content:center;
 }
+
+html,
+body{
+  background:#000 !important;
+  color-scheme:dark;
+}
