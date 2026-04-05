@@ -278,7 +278,16 @@ export default async (req) => {
 
     console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
 
-    await resolveFinishedMarketsOnce(adminKeypair)
+const adminBalanceLamports = await connection.getBalance(adminKeypair.publicKey)
+console.log('[keeper] admin SOL balance:', adminBalanceLamports / 1_000_000_000)
+
+if (adminBalanceLamports < 0.01 * 1_000_000_000) {
+  throw new Error(
+    `Wallet admin sem SOL suficiente na devnet. Saldo atual: ${adminBalanceLamports / 1_000_000_000} SOL`
+  )
+}
+
+await resolveFinishedMarketsOnce(adminKeypair)
 
     console.log('[keeper] finalizou sem erro')
     return new Response(null, { status: 200 })
