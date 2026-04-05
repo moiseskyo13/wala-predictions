@@ -254,6 +254,8 @@ const searchInput = document.getElementById('searchInput')
 const walletAddressText = document.getElementById('walletAddressText')
 const walletBalanceText = document.getElementById('walletBalanceText')
 
+const featuredSectionCard = featuredGrid.closest('.card')
+
 const sidebar = document.getElementById('sidebar')
 const walletMenu = document.getElementById('walletMenu')
 const sidebarOverlay = document.getElementById('sidebarOverlay')
@@ -1731,6 +1733,7 @@ function createCard(match) {
 
 function renderMatches() {
   const term = searchInput.value.trim().toLowerCase()
+  const isSearching = term.length > 0
 
   const filtered = matches.filter((match) => {
     const text = `${match.league} ${match.teamA} ${match.teamB}`.toLowerCase()
@@ -1743,13 +1746,20 @@ function renderMatches() {
   featuredGrid.innerHTML = ''
   marketGrid.innerHTML = ''
 
-  featured.forEach((match) => featuredGrid.appendChild(createCard(match)))
+  if (!isSearching) {
+    featured.forEach((match) => featuredGrid.appendChild(createCard(match)))
+    featuredCount.textContent = featured.length
+    featuredEmpty.classList.toggle('show', featured.length === 0)
+    featuredSectionCard.style.display = ''
+  } else {
+    featuredCount.textContent = '0'
+    featuredEmpty.classList.remove('show')
+    featuredSectionCard.style.display = 'none'
+  }
+
   regular.forEach((match) => marketGrid.appendChild(createCard(match)))
 
-  featuredCount.textContent = featured.length
   marketCount.textContent = regular.length
-
-  featuredEmpty.classList.toggle('show', featured.length === 0)
   marketEmpty.classList.toggle('show', regular.length === 0)
 }
 
