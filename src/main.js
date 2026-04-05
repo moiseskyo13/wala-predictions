@@ -102,7 +102,7 @@ document.querySelector('#app').innerHTML = `
     <div class="card">
       <h1 class="title"><span class="wala-color">WALA</span> Predictions</h1>
       <p class="wallet-subtitle">
-        Mercados esportivos A ou B para futebol.
+        Mercados esportivos futebol.
       </p>
 
       <div class="wallet-stats" style="display:none;">
