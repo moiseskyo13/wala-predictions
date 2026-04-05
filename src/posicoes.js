@@ -91,10 +91,10 @@ document.querySelector('#app').innerHTML = `
     </div>
 
     <div id="sidebar" class="side-menu">
-      <a href="https://walat.netlify.app/">Home</a>
-      <a href="/index.html">Predictions</a>
-      <a href="/carteira.html">Carteira</a>
-      <a href="/posicoes.html">Minhas Posições</a>
+<a href="https://walat.netlify.app/">Home</a>
+<a href="/index.html">Predictions</a>
+<a href="https://walat.netlify.app/market">Buy Wala</a>
+<a href="/posicoes.html">Minhas Posições</a>
     </div>
 
     <div class="card">
