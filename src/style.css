@@ -1530,3 +1530,48 @@ input[type="number"]{
   appearance:textfield;
   -moz-appearance:textfield;
 }
+
+html,
+body,
+.container,
+.card,
+.match-card,
+.inline-market-card,
+.match-box,
+.inline-match-box,
+.section-head,
+.wallet-menu,
+.side-menu,
+.bet-panel,
+.stat-box,
+.wallet-stat-box,
+.empty-state,
+.notice-modal-text,
+.prompt-modal-text,
+button,
+a,
+h1,
+h2,
+h3,
+h4,
+p,
+span,
+strong,
+label,
+div{
+  user-select:none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+img,
+svg{
+  -webkit-user-drag:none;
+  user-drag:none;
+}
+
+::selection{
+  background:transparent;
+}
