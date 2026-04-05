@@ -35,6 +35,7 @@ const connection = new Connection(RPC_URL, 'confirmed')
 const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
 const protocolFeeWalletPubkey = new PublicKey(PROTOCOL_FEE_WALLET)
+const SYSTEM_PROGRAM_PUBKEY = new PublicKey('11111111111111111111111111111111')
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
 
@@ -267,10 +268,24 @@ export default async (req) => {
 
     console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
 
+const adminInfo = await connection.getAccountInfo(adminKeypair.publicKey)
+console.log('[keeper] admin account owner:', adminInfo?.owner?.toBase58?.() || 'null')
+console.log('[keeper] admin account data length:', adminInfo?.data?.length || 0)
+
+if (!adminInfo) {
+  throw new Error('Conta admin não encontrada na rede.')
+}
+
+if (!adminInfo.owner.equals(SYSTEM_PROGRAM_PUBKEY)) {
+  throw new Error(
+    `ADMIN_KEYPAIR_JSON inválido para fee payer. Owner atual: ${adminInfo.owner.toBase58()}`
+  )
+}
+
 const adminBalanceLamports = await connection.getBalance(adminKeypair.publicKey)
 console.log('[keeper] admin SOL balance:', adminBalanceLamports / 1_000_000_000)
 
-if (adminBalanceLamports < 0.01 * 1_000_000_000) {
+if (adminBalanceLamports < 0.001 * 1_000_000_000) {
   throw new Error(
     `Wallet admin sem SOL suficiente na devnet. Saldo atual: ${adminBalanceLamports / 1_000_000_000} SOL`
   )
