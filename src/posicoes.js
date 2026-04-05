@@ -146,6 +146,29 @@ document.querySelector('#app').innerHTML = `
       </div>
     </div>
   </div>
+
+  <div id="claimNoticeOverlay" class="overlay"></div>
+
+  <div id="claimNoticeModal" class="custom-modal">
+    <div class="card modal-card notice-modal-card">
+      <div class="modal-header">
+        <h3 id="claimNoticeTitle">Aviso</h3>
+        <button class="modal-close" id="closeClaimNoticeBtn" type="button">✕</button>
+      </div>
+
+      <div class="notice-modal-body">
+        <p id="claimNoticeText" class="notice-modal-text">
+          Mensagem do sistema
+        </p>
+      </div>
+
+      <div class="notice-modal-footer">
+        <button id="claimNoticeConfirmBtn" class="launch" type="button">
+          Entendi
+        </button>
+      </div>
+    </div>
+  </div>
 `
 
 const sidebar = document.getElementById('sidebar')
@@ -166,6 +189,13 @@ const positionsCount = document.getElementById('positionsCount')
 const positionsGrid = document.getElementById('positionsGrid')
 const positionsEmpty = document.getElementById('positionsEmpty')
 
+const claimNoticeOverlay = document.getElementById('claimNoticeOverlay')
+const claimNoticeModal = document.getElementById('claimNoticeModal')
+const claimNoticeTitle = document.getElementById('claimNoticeTitle')
+const claimNoticeText = document.getElementById('claimNoticeText')
+const closeClaimNoticeBtn = document.getElementById('closeClaimNoticeBtn')
+const claimNoticeConfirmBtn = document.getElementById('claimNoticeConfirmBtn')
+
 function openSidebar() {
   sidebar.style.right = '0'
   sidebarOverlay.classList.add('active')
@@ -184,6 +214,18 @@ function openWalletMenu() {
 function closeWalletMenu() {
   walletMenu.style.right = '-280px'
   walletOverlay.classList.remove('active')
+}
+
+function openClaimNoticeModal(title, message) {
+  claimNoticeTitle.textContent = title || 'Aviso'
+  claimNoticeText.textContent = message || 'Mensagem não informada.'
+  claimNoticeModal.classList.add('active')
+  claimNoticeOverlay.classList.add('active')
+}
+
+function closeClaimNoticeModal() {
+  claimNoticeModal.classList.remove('active')
+  claimNoticeOverlay.classList.remove('active')
 }
 
 function setConnectButtonText(text) {
@@ -441,7 +483,7 @@ async function claimPositionDirect(positionItem) {
 
   try {
     if (positionItem?.position?.claimed) {
-      alert('Essa posição já foi resgatada.')
+      openClaimNoticeModal('Posição já resgatada', 'Essa posição já foi resgatada.')
       return
     }
 
@@ -456,12 +498,18 @@ async function claimPositionDirect(positionItem) {
     console.log('match status for claim:', fixtureId, matchStatus)
 
     if (isMatchStillLockedForClaim(matchStatus)) {
-      alert('Jogo ainda não finalizado. Só é possível resgatar após o término da partida.')
+      openClaimNoticeModal(
+        'Resgate indisponível',
+        'Jogo ainda não finalizado. Só é possível resgatar após o término da partida.'
+      )
       return
     }
 
     if (!isMatchFinishedStatus(matchStatus)) {
-      alert(`Partida ainda indisponível para resgate. Status atual: ${matchStatus || 'desconhecido'}`)
+      openClaimNoticeModal(
+        'Partida indisponível',
+        `Partida ainda indisponível para resgate. Status atual: ${matchStatus || 'desconhecido'}`
+      )
       return
     }
 
@@ -475,11 +523,17 @@ async function claimPositionDirect(positionItem) {
         positionItem.market?.winningOutcome &&
         !positionItem.position?.claimed
       ) {
-        alert('Sua posição não é vencedora neste mercado.')
+        openClaimNoticeModal(
+          'Posição não vencedora',
+          'Sua posição não é vencedora neste mercado.'
+        )
         return
       }
 
-      alert('Essa posição ainda não pode ser resgatada.')
+      openClaimNoticeModal(
+        'Resgate indisponível',
+        'Essa posição ainda não pode ser resgatada.'
+      )
       return
     }
 
@@ -819,6 +873,10 @@ refreshAction.addEventListener('click', async () => {
 })
 
 disconnectAction.addEventListener('click', disconnectWallet)
+
+closeClaimNoticeBtn.addEventListener('click', closeClaimNoticeModal)
+claimNoticeConfirmBtn.addEventListener('click', closeClaimNoticeModal)
+claimNoticeOverlay.addEventListener('click', closeClaimNoticeModal)
 
 async function initApp() {
   setDisconnectedUI()
