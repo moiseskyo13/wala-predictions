@@ -1,5 +1,7 @@
 import fs from 'fs'
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
 import { AnchorProvider, Program } from '@anchor-lang/core'
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -8,24 +10,25 @@ import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token'
-
 const walaPredictsIdl = JSON.parse(
-  fs.readFileSync(new URL('../../src/idl/wala_predicts.json', import.meta.url), 'utf8')
+  fs.readFileSync(new URL('../src/idl/wala_predicts.json', import.meta.url), 'utf8')
 )
 
-function env(name, fallback = '') {
-  return process.env[name] || fallback
-}
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // ===== CONFIG =====
-const RPC_URL = env('RPC_URL', 'https://api.devnet.solana.com')
-const FOOTBALL_DATA_TOKEN = env('FOOTBALL_DATA_TOKEN', '')
+const RPC_URL = 'https://api.devnet.solana.com'
+const FOOTBALL_DATA_TOKEN = '8ed2c55323794e458eb6d4c7f97174fd'
 const FOOTBALL_DATA_BASE = 'https://api.football-data.org/v4'
+const CHECK_EVERY_MS = 60_000
 
-const WALA_TOKEN_MINT = env('WALA_TOKEN_MINT', 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2')
-const WALA_PREDICTS_PROGRAM_ID = env('WALA_PREDICTS_PROGRAM_ID', 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur')
-const PROTOCOL_FEE_WALLET = env('PROTOCOL_FEE_WALLET', '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv')
-const ADMIN_KEYPAIR_JSON = env('ADMIN_KEYPAIR_JSON', '')
+const WALA_TOKEN_MINT = 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2'
+const WALA_PREDICTS_PROGRAM_ID = 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur'
+const PROTOCOL_FEE_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
+
+// ajuste para o caminho real da sua keypair admin
+const ADMIN_KEYPAIR_PATH = 'C:/Users/User/.config/solana/id.json'
 // ==================
 
 const connection = new Connection(RPC_URL, 'confirmed')
@@ -34,21 +37,6 @@ const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
 const protocolFeeWalletPubkey = new PublicKey(PROTOCOL_FEE_WALLET)
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
-
-function validateConfig() {
-  if (!FOOTBALL_DATA_TOKEN) {
-    throw new Error('FOOTBALL_DATA_TOKEN não configurado na Function.')
-  }
-
-  if (!ADMIN_KEYPAIR_JSON) {
-    throw new Error('ADMIN_KEYPAIR_JSON não configurado na Function.')
-  }
-}
-
-function loadKeypairFromJson(secretJson) {
-  const secret = Uint8Array.from(JSON.parse(secretJson))
-  return Keypair.fromSecretKey(secret)
-}
 
 async function detectWalaTokenProgram() {
   const mintInfo = await connection.getAccountInfo(walaMintPubkey)
@@ -63,13 +51,21 @@ async function detectWalaTokenProgram() {
 
   console.log(
     '[WALA TOKEN PROGRAM / KEEPER]',
-    walaTokenProgramId.equals(TOKEN_2022_PROGRAM_ID)
-      ? 'TOKEN_2022_PROGRAM_ID'
-      : 'TOKEN_PROGRAM_ID',
+    walaTokenProgramId.equals(TOKEN_2022_PROGRAM_ID) ? 'TOKEN_2022_PROGRAM_ID' : 'TOKEN_PROGRAM_ID',
     walaTokenProgramId.toBase58()
   )
 
   return walaTokenProgramId
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function loadKeypair(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8')
+  const secret = Uint8Array.from(JSON.parse(raw))
+  return Keypair.fromSecretKey(secret)
 }
 
 function getNodeWallet(keypair) {
@@ -111,9 +107,6 @@ async function footballDataGet(pathname) {
   })
 
   const text = await response.text()
-
-  console.log('[keeper] football-data status:', response.status)
-  console.log('[keeper] football-data preview:', text.slice(0, 300))
 
   if (!response.ok) {
     throw new Error(`football-data ${response.status} - ${text}`)
@@ -178,14 +171,16 @@ async function ensureFeeRecipientAta(adminPubkey) {
   return { feeRecipientAta, preInstructions, tokenProgram }
 }
 
-async function resolveFinishedMarketsOnce(adminKeypair) {
+async function resolveFinishedMarketsOnce() {
+  const adminKeypair = loadKeypair(ADMIN_KEYPAIR_PATH)
   const provider = getProvider(adminKeypair)
   const program = getProgram(provider)
 
   const markets = await program.account.marketAccount.all()
+
   const openMarkets = markets.filter((item) => isMarketOpen(item.account.status))
 
-  console.log(`[keeper] mercados abertos encontrados: ${openMarkets.length}`)
+  console.log(`\n[keeper] mercados abertos encontrados: ${openMarkets.length}`)
 
   for (const item of openMarkets) {
     const marketPda = item.publicKey
@@ -199,101 +194,72 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
       console.log(`[keeper] fixture ${fixtureId} status API: ${apiStatus}`)
 
       if (apiStatus === 'IN_PLAY' || apiStatus === 'PAUSED') {
-        if (market.status?.open) {
-          const closeSignature = await program.methods
-            .closeMarket()
-            .accounts({
-              authority: adminKeypair.publicKey,
-              market: marketPda,
-            })
-            .rpc()
+  if (market.status?.open) {
+    const closeSignature = await program.methods
+      .closeMarket()
+      .accounts({
+        authority: adminKeypair.publicKey,
+        market: marketPda,
+      })
+      .rpc()
 
-          console.log(
-            `[keeper] mercado ${fixtureId} fechado automaticamente | tx: ${closeSignature}`
-          )
-        }
+    console.log(
+      `[keeper] mercado ${fixtureId} fechado automaticamente | tx: ${closeSignature}`
+    )
+  }
 
-        continue
-      }
+  continue
+}
 
-      if (apiStatus !== 'FINISHED') {
-        continue
-      }
+if (apiStatus !== 'FINISHED') {
+  continue
+}
 
-      const outcome = getOutcomeFromScore(matchData)
+const outcome = getOutcomeFromScore(matchData)
 
-      if (!outcome) {
-        console.log(`[keeper] fixture ${fixtureId} sem placar final válido`)
-        continue
-      }
+if (!outcome) {
+  console.log(`[keeper] fixture ${fixtureId} sem placar final válido`)
+  continue
+}
 
-      const [vaultPda] = deriveVaultPda(marketPda)
-      const { feeRecipientAta, preInstructions, tokenProgram } =
-        await ensureFeeRecipientAta(adminKeypair.publicKey)
+const [vaultPda] = deriveVaultPda(marketPda)
+const { feeRecipientAta, preInstructions, tokenProgram } =
+  await ensureFeeRecipientAta(adminKeypair.publicKey)
 
-      const signature = await program.methods
-        .resolveMarket(outcomeArg(outcome))
-        .accounts({
-          authority: adminKeypair.publicKey,
-          market: marketPda,
-          vaultTokenAccount: vaultPda,
-          feeRecipientTokenAccount: feeRecipientAta,
-          walaMint: walaMintPubkey,
-          tokenProgram: tokenProgram,
-        })
-        .preInstructions(preInstructions)
-        .rpc()
+const signature = await program.methods
+  .resolveMarket(outcomeArg(outcome))
+  .accounts({
+    authority: adminKeypair.publicKey,
+    market: marketPda,
+    vaultTokenAccount: vaultPda,
+    feeRecipientTokenAccount: feeRecipientAta,
+    walaMint: walaMintPubkey,
+    tokenProgram: tokenProgram,
+  })
+  .preInstructions(preInstructions)
+  .rpc()
 
-      console.log(
-        `[keeper] mercado ${fixtureId} resolvido como ${outcome} | tx: ${signature}`
-      )
+console.log(
+  `[keeper] mercado ${fixtureId} resolvido como ${outcome} | tx: ${signature}`
+)
     } catch (error) {
       console.error(`[keeper] erro ao processar fixture ${fixtureId}:`, error)
-      console.error('[keeper] error message:', error?.message)
-      console.error('[keeper] error stack:', error?.stack)
-      console.error('[keeper] error logs:', error?.logs || error?.transactionLogs || error?.errorLogs)
-      console.error('[keeper] full error json:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
     }
   }
 }
 
-export default async (req) => {
-  try {
-    console.log('[keeper] iniciou function')
-    validateConfig()
+async function main() {
+  console.log('[keeper] iniciado')
 
-    const payload = await req.json().catch(() => ({}))
-    console.log('[keeper] next_run:', payload?.next_run || 'manual')
-    console.log('[keeper] RPC_URL:', RPC_URL)
-    console.log('[keeper] WALA_TOKEN_MINT:', WALA_TOKEN_MINT)
-    console.log('[keeper] WALA_PREDICTS_PROGRAM_ID:', WALA_PREDICTS_PROGRAM_ID)
-    console.log('[keeper] PROTOCOL_FEE_WALLET:', PROTOCOL_FEE_WALLET)
-    console.log('[keeper] ADMIN_KEYPAIR_JSON exists:', !!ADMIN_KEYPAIR_JSON)
+  while (true) {
+    try {
+      await resolveFinishedMarketsOnce()
+    } catch (error) {
+      console.error('[keeper] erro no loop principal:', error)
+    }
 
-    const adminKeypair = loadKeypairFromJson(ADMIN_KEYPAIR_JSON)
-
-    console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
-
-    await resolveFinishedMarketsOnce(adminKeypair)
-
-    console.log('[keeper] finalizou sem erro')
-    return new Response(null, { status: 200 })
-  } catch (error) {
-    console.error('[keeper] erro fatal:', error)
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        error: error?.message || String(error),
-      }),
-      {
-        status: 500,
-        headers: { 'content-type': 'application/json' },
-      }
-    )
+    await sleep(CHECK_EVERY_MS)
   }
 }
 
-export const config = {
-  schedule: '*/2 * * * *',
-  includedFiles: ['src/idl/wala_predicts.json'],
-}
+main()

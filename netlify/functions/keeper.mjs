@@ -203,22 +203,11 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
       console.log(`[keeper] fixture ${fixtureId} status API: ${apiStatus}`)
 
       if (apiStatus === 'IN_PLAY' || apiStatus === 'PAUSED') {
-        if (market.status?.open) {
-          const closeSignature = await program.methods
-            .closeMarket()
-            .accounts({
-              authority: adminKeypair.publicKey,
-              market: marketPda,
-            })
-            .rpc()
-
-          console.log(
-            `[keeper] mercado ${fixtureId} fechado automaticamente | tx: ${closeSignature}`
-          )
-        }
-
-        continue
-      }
+  console.log(
+    `[keeper] fixture ${fixtureId} ainda em andamento. Nenhuma ação on-chain será feita agora.`
+  )
+  continue
+}
 
       if (apiStatus !== 'FINISHED') {
         continue
@@ -307,6 +296,6 @@ await resolveFinishedMarketsOnce(adminKeypair)
 }
 
 export const config = {
-  schedule: '*/2 * * * *',
+  schedule: '*/5 * * * *',
   includedFiles: ['src/idl/wala_predicts.json'],
 }
