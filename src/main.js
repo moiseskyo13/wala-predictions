@@ -263,6 +263,39 @@ document.querySelector('#app').innerHTML = `
       </div>
     </div>
   </div>
+
+  <div id="appPromptOverlay" class="overlay"></div>
+
+  <div id="appPromptModal" class="custom-modal">
+    <div class="card modal-card prompt-modal-card">
+      <div class="modal-header">
+        <h3 id="appPromptTitle">Informar valor</h3>
+        <button class="modal-close" id="closeAppPromptBtn" type="button">✕</button>
+      </div>
+
+      <div class="prompt-modal-body">
+        <p id="appPromptText" class="prompt-modal-text">
+          Digite um valor.
+        </p>
+
+        <input
+          id="appPromptInput"
+          class="input prompt-modal-input"
+          type="text"
+          placeholder="Digite aqui"
+        />
+      </div>
+
+      <div class="prompt-modal-footer">
+        <button id="appPromptCancelBtn" class="prompt-cancel-btn" type="button">
+          Cancelar
+        </button>
+        <button id="appPromptConfirmBtn" class="notice-confirm-btn" type="button">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
 `
 
 let matches = []
@@ -317,6 +350,15 @@ const appNoticeTitle = document.getElementById('appNoticeTitle')
 const appNoticeText = document.getElementById('appNoticeText')
 const closeAppNoticeBtn = document.getElementById('closeAppNoticeBtn')
 const appNoticeConfirmBtn = document.getElementById('appNoticeConfirmBtn')
+
+const appPromptOverlay = document.getElementById('appPromptOverlay')
+const appPromptModal = document.getElementById('appPromptModal')
+const appPromptTitle = document.getElementById('appPromptTitle')
+const appPromptText = document.getElementById('appPromptText')
+const appPromptInput = document.getElementById('appPromptInput')
+const closeAppPromptBtn = document.getElementById('closeAppPromptBtn')
+const appPromptCancelBtn = document.getElementById('appPromptCancelBtn')
+const appPromptConfirmBtn = document.getElementById('appPromptConfirmBtn')
 
 function isBettableStatus(status) {
   return status === 'SCHEDULED' || status === 'TIMED'
@@ -706,7 +748,13 @@ async function depositTreasuryOnChain() {
     return
   }
 
-  const amountValue = prompt('Valor em WALA V2 para abastecer a Treasury Global', '10000')
+  const amountValue = await openAppPromptModal({
+    title: 'Abastecer Treasury Global',
+    message: 'Digite o valor em WALA V2 para abastecer a treasury.',
+    placeholder: 'Ex: 10000',
+    defaultValue: '10000',
+    confirmText: 'Abastecer',
+  })
   if (amountValue === null) return
 
   let rawAmount
@@ -879,7 +927,13 @@ async function resolveMarketOnChain() {
   const provider = getAnchorProvider()
   const program = getProgram(provider)
 
-  const typed = prompt('Digite HOME, DRAW ou AWAY')
+  const typed = await openAppPromptModal({
+    title: 'Resolver mercado',
+    message: 'Digite HOME, DRAW ou AWAY.',
+    placeholder: 'HOME, DRAW ou AWAY',
+    defaultValue: 'HOME',
+    confirmText: 'Resolver',
+  })
   if (!typed) return
   const outcome = typed.trim().toUpperCase()
   if (!['HOME', 'DRAW', 'AWAY'].includes(outcome)) {
@@ -1521,6 +1575,50 @@ function showAppAlert(message, title = 'Aviso') {
   openAppNoticeModal(title, message)
 }
 
+let appPromptResolver = null
+
+function openAppPromptModal({
+  title = 'Informar valor',
+  message = 'Digite um valor.',
+  placeholder = 'Digite aqui',
+  defaultValue = '',
+  confirmText = 'Confirmar',
+} = {}) {
+  appPromptTitle.textContent = title
+  appPromptText.textContent = message
+  appPromptInput.value = defaultValue
+  appPromptInput.placeholder = placeholder
+  appPromptConfirmBtn.textContent = confirmText
+
+  appPromptModal.classList.add('active')
+  appPromptOverlay.classList.add('active')
+
+  setTimeout(() => {
+    appPromptInput.focus()
+    appPromptInput.select()
+  }, 30)
+
+  return new Promise((resolve) => {
+    appPromptResolver = resolve
+  })
+}
+
+function closeAppPromptModal(result = null) {
+  appPromptModal.classList.remove('active')
+  appPromptOverlay.classList.remove('active')
+
+  const resolve = appPromptResolver
+  appPromptResolver = null
+
+  if (resolve) {
+    resolve(result)
+  }
+}
+
+function submitAppPromptModal() {
+  closeAppPromptModal(appPromptInput.value.trim())
+}
+
 async function connectWallet() {
   try {
     const provider = getPhantomProvider()
@@ -1837,6 +1935,22 @@ marketModalOverlay.addEventListener('click', closeMarketModal)
 closeAppNoticeBtn.addEventListener('click', closeAppNoticeModal)
 appNoticeConfirmBtn.addEventListener('click', closeAppNoticeModal)
 appNoticeOverlay.addEventListener('click', closeAppNoticeModal)
+
+closeAppPromptBtn.addEventListener('click', () => closeAppPromptModal(null))
+appPromptCancelBtn.addEventListener('click', () => closeAppPromptModal(null))
+appPromptConfirmBtn.addEventListener('click', submitAppPromptModal)
+appPromptOverlay.addEventListener('click', () => closeAppPromptModal(null))
+appPromptInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    submitAppPromptModal()
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeAppPromptModal(null)
+  }
+})
 
 forecastABtn.addEventListener('click', () => {
   setSelectedOutcome('HOME')

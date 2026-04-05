@@ -1454,3 +1454,68 @@ body{
     font-size:13px;
   }
 }
+
+.prompt-modal-card{
+  width:100%;
+  max-width:380px;
+  margin-bottom:0;
+  position:relative;
+  z-index:1101;
+  padding:16px;
+  border-radius:18px;
+}
+
+.prompt-modal-body{
+  padding:4px 0 10px;
+}
+
+.prompt-modal-text{
+  color:#d7dde5;
+  font-size:14px;
+  line-height:1.55;
+  margin-bottom:12px;
+}
+
+.prompt-modal-input{
+  width:100%;
+}
+
+.prompt-modal-footer{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.prompt-modal-footer > *{
+  flex:1;
+}
+
+.prompt-cancel-btn{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:#11151e;
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  transition:0.18s ease;
+}
+
+.prompt-cancel-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,255,255,0.18);
+}
+
+@media (max-width:480px){
+  .prompt-modal-card{
+    max-width:100%;
+    padding:14px;
+    border-radius:16px;
+  }
+
+  .prompt-modal-text{
+    font-size:13px;
+  }
+}
