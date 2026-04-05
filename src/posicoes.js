@@ -333,6 +333,67 @@ function formatMarketStatusText(market) {
   return '-'
 }
 
+async function footballDataGet(path) {
+  const url = `${FOOTBALL_DATA_BASE}${path}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
+
+  const rawText = await response.text()
+  const contentType = response.headers.get('content-type') || ''
+
+  console.log('football-data url:', url)
+  console.log('football-data status:', response.status)
+  console.log('football-data content-type:', contentType)
+  console.log('football-data preview:', rawText.slice(0, 300))
+
+  if (!response.ok) {
+    throw new Error(`football-data ${response.status} - ${rawText}`)
+  }
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Resposta não JSON recebida: ${contentType} - ${rawText.slice(0, 300)}`)
+  }
+
+  return JSON.parse(rawText)
+}
+
+function getFixtureIdFromMarket(market) {
+  if (!market?.fixtureId) return null
+
+  if (typeof market.fixtureId?.toString === 'function') {
+    const parsed = Number(market.fixtureId.toString())
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  const parsed = Number(market.fixtureId)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function isMatchFinishedStatus(status) {
+  return status === 'FINISHED'
+}
+
+function isMatchStillLockedForClaim(status) {
+  return status === 'SCHEDULED'
+    || status === 'TIMED'
+    || status === 'IN_PLAY'
+    || status === 'PAUSED'
+  }
+
+async function fetchMatchStatusByFixtureId(fixtureId) {
+  if (!fixtureId) {
+    throw new Error('fixtureId não encontrado no market.')
+  }
+
+  const data = await footballDataGet(`/matches/${fixtureId}`)
+  return data?.status || null
+}
+
 async function loadWalletTokenBalance() {
   try {
     if (!connectedPublicKey) return
@@ -375,7 +436,53 @@ async function claimPositionDirect(positionItem) {
     return
   }
 
+  const button = document.getElementById(`claim-btn-${positionItem.positionAddress}`)
+  const originalText = button?.textContent || 'Resgatar'
+
   try {
+    if (positionItem?.position?.claimed) {
+      alert('Essa posição já foi resgatada.')
+      return
+    }
+
+    if (button) {
+      button.disabled = true
+      button.textContent = 'Verificando jogo...'
+    }
+
+    const fixtureId = getFixtureIdFromMarket(positionItem.market)
+    const matchStatus = await fetchMatchStatusByFixtureId(fixtureId)
+
+    console.log('match status for claim:', fixtureId, matchStatus)
+
+    if (isMatchStillLockedForClaim(matchStatus)) {
+      alert('Jogo ainda não finalizado. Só é possível resgatar após o término da partida.')
+      return
+    }
+
+    if (!isMatchFinishedStatus(matchStatus)) {
+      alert(`Partida ainda indisponível para resgate. Status atual: ${matchStatus || 'desconhecido'}`)
+      return
+    }
+
+    if (!positionItem.market?.status?.resolved) {
+      alert('A partida terminou, mas o mercado ainda não foi resolvido on-chain. Aguarde a resolução.')
+      return
+    }
+
+    if (!canClaimPosition(positionItem.position, positionItem.market)) {
+      if (
+        positionItem.market?.winningOutcome &&
+        !positionItem.position?.claimed
+      ) {
+        alert('Sua posição não é vencedora neste mercado.')
+        return
+      }
+
+      alert('Essa posição ainda não pode ser resgatada.')
+      return
+    }
+
     const provider = getAnchorProvider()
     const program = getProgram(provider)
 
@@ -410,7 +517,6 @@ async function claimPositionDirect(positionItem) {
       )
     }
 
-    const button = document.getElementById(`claim-btn-${positionItem.positionAddress}`)
     if (button) {
       button.disabled = true
       button.textContent = 'Resgatando...'
@@ -419,16 +525,16 @@ async function claimPositionDirect(positionItem) {
     const signature = await program.methods
       .claimPosition()
       .accounts({
-  user: provider.wallet.publicKey,
-  market: marketPda,
-  position: positionPda,
-  vaultTokenAccount: vaultPda,
-  treasury: treasuryPda,
-  treasuryVaultTokenAccount: treasuryVaultPda,
-  userWalaAta,
-  walaMint: walaMintPubkey,
-  tokenProgram: tokenProgram,
-})
+        user: provider.wallet.publicKey,
+        market: marketPda,
+        position: positionPda,
+        vaultTokenAccount: vaultPda,
+        treasury: treasuryPda,
+        treasuryVaultTokenAccount: treasuryVaultPda,
+        userWalaAta,
+        walaMint: walaMintPubkey,
+        tokenProgram: tokenProgram,
+      })
       .preInstructions(preInstructions)
       .rpc()
 
@@ -439,6 +545,11 @@ async function claimPositionDirect(positionItem) {
     console.error('Erro ao resgatar posição:', error)
     alert(error?.message || 'Erro ao resgatar posição.')
     await loadPositions()
+  } finally {
+    if (button) {
+      button.disabled = false
+      button.textContent = originalText
+    }
   }
 }
 
@@ -448,6 +559,7 @@ function createPositionCard(item) {
 
   const status = statusMeta(item.market, item.position)
   const canClaim = canClaimPosition(item.position, item.market)
+  const canClickClaim = !item.position?.claimed
   const claimedAmountUi = Number(rawToUiText(item.position.claimedAmount || 0))
   const amountUi = Number(rawToUiText(item.position.amount || 0))
   const chosenSide = outcomeText(item.position.outcome, item.market)
@@ -494,7 +606,7 @@ function createPositionCard(item) {
         id="claim-btn-${item.positionAddress}"
         class="claim-btn"
         type="button"
-        ${canClaim ? '' : 'disabled'}
+        ${canClickClaim ? '' : 'disabled'}
       >
         ${item.position.claimed ? 'Já resgatado' : 'Resgatar'}
       </button>
@@ -506,7 +618,7 @@ function createPositionCard(item) {
   `
 
   const claimBtn = card.querySelector(`#claim-btn-${item.positionAddress}`)
-  if (claimBtn && canClaim) {
+  if (claimBtn && canClickClaim) {
     claimBtn.addEventListener('click', () => claimPositionDirect(item))
   }
 
