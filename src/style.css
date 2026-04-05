@@ -1333,3 +1333,7 @@ h1,h2,h3,p,span,label,div,strong{
     margin-bottom:22px;
   }
 }
+
+.card:has(#featuredGrid){
+  display:none !important;
+}
