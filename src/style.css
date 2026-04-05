@@ -1337,3 +1337,56 @@ h1,h2,h3,p,span,label,div,strong{
 .card:has(#featuredGrid){
   display:none !important;
 }
+html,
+body{
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+@media (max-width:1199px){
+  body{
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  .container{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .card,
+  .match-card,
+  .inline-market-card,
+  .match-box,
+  .inline-match-box,
+  .stats-grid,
+  .inline-stats-grid,
+  .bet-panel,
+  .topbar,
+  .section-head{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .match-title,
+  .wallet-stat-value,
+  .stat-value,
+  .match-time,
+  strong,
+  span{
+    word-break:break-word;
+    overflow-wrap:anywhere;
+  }
+}
+@media (max-width:1199px){
+  .container{
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .side-menu,
+  .wallet-menu{
+    max-width:280px;
+  }
+}
