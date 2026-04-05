@@ -1182,8 +1182,8 @@ h1,h2,h3,p,span,label,div,strong{
 
   .side-menu,
   .wallet-menu{
-    width:320px;
-    right:-320px;
+    width:280px;
+    right:-280px;
     background:rgba(10,13,20,0.96);
     backdrop-filter:blur(14px);
     -webkit-backdrop-filter:blur(14px);
@@ -1293,8 +1293,8 @@ h1,h2,h3,p,span,label,div,strong{
 
   .side-menu,
   .wallet-menu{
-    width:340px;
-    right:-340px;
+    width:280px;
+    right:-280px;
   }
 }
 
