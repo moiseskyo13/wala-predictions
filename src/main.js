@@ -738,79 +738,102 @@ function outcomeLabel(outcome, match) {
   return match.teamB
 }
 
-async function buyPositionOnChain(outcome) {
-  if (!selectedMatch) return
+async function buyPositionOnChain(outcome, options = {}) {
+  const targetMatch = options.match || selectedMatch
+  const targetAmountInput = options.amountInputEl || betAmountInput
+  const targetHintText = options.hintEl || betHintText
+  const targetPayoutText = options.payoutEl || estimatedPayoutText
+  const targetConfirmBtn = options.confirmBtn || confirmBetBtn
+  const resetSelection = typeof options.resetSelection === 'function'
+    ? options.resetSelection
+    : null
+
+  if (!targetMatch) return
 
   if (!walletConnected) {
-    betHintText.textContent = 'Conecte a wallet antes de comprar posição.'
+    targetHintText.textContent = 'Conecte a wallet antes de comprar posição.'
     return
   }
 
-  if (!isBettableStatus(selectedMatch.status)) {
-    betHintText.textContent = 'Esse mercado não está aberto.'
+  if (!isBettableStatus(targetMatch.status)) {
+    targetHintText.textContent = 'Esse mercado não está aberto.'
     return
   }
 
-  const amountInput = betAmountInput.value.trim()
-  if (!amountInput) {
-    betHintText.textContent = 'Digite o valor da aposta.'
+  const amountInputValue = targetAmountInput.value.trim()
+  if (!amountInputValue) {
+    targetHintText.textContent = 'Digite o valor da aposta.'
     return
   }
 
-  const rawAmount = uiToRawAmount(amountInput)
+  const rawAmount = uiToRawAmount(amountInputValue)
   if (rawAmount.lten(0)) {
-    betHintText.textContent = 'Valor inválido.'
+    targetHintText.textContent = 'Valor inválido.'
     return
   }
 
-  confirmBetBtn.disabled = true
-  confirmBetBtn.textContent = 'Enviando...'
+  targetConfirmBtn.disabled = true
+  targetConfirmBtn.textContent = 'Enviando...'
 
-  const provider = getAnchorProvider()
-  const program = getProgram(provider)
+  try {
+    const provider = getAnchorProvider()
+    const program = getProgram(provider)
 
-  const tokenProgram = await detectWalaTokenProgram()
+    const tokenProgram = await detectWalaTokenProgram()
 
-const { marketPda, vaultPda } = await ensureMarketOnChain(selectedMatch)
+    const { marketPda, vaultPda } = await ensureMarketOnChain(targetMatch)
 
-const couponId = Date.now()
+    const couponId = Date.now()
 
-const [positionPda] = derivePositionPda(
-  marketPda,
-  provider.wallet.publicKey,
-  couponId
-)
+    const [positionPda] = derivePositionPda(
+      marketPda,
+      provider.wallet.publicKey,
+      couponId
+    )
 
-const userWalaAta = await getAssociatedTokenAddress(
-  walaMintPubkey,
-  provider.wallet.publicKey,
-  false,
-  tokenProgram
-)
+    const userWalaAta = await getAssociatedTokenAddress(
+      walaMintPubkey,
+      provider.wallet.publicKey,
+      false,
+      tokenProgram
+    )
 
-const signature = await program.methods
-  .buyPosition(new BN(String(couponId)), outcomeArg(outcome), rawAmount)
-  .accounts({
-    user: provider.wallet.publicKey,
-    market: marketPda,
-    userWalaAta,
-    position: positionPda,
-    vaultTokenAccount: vaultPda,
-    walaMint: walaMintPubkey,
-    tokenProgram: tokenProgram,
-    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    systemProgram: SystemProgram.programId,
-  })
-  .rpc()
-  console.log('Compra on-chain:', signature)
+    const signature = await program.methods
+      .buyPosition(new BN(String(couponId)), outcomeArg(outcome), rawAmount)
+      .accounts({
+        user: provider.wallet.publicKey,
+        market: marketPda,
+        userWalaAta,
+        position: positionPda,
+        vaultTokenAccount: vaultPda,
+        walaMint: walaMintPubkey,
+        tokenProgram: tokenProgram,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
 
-  await loadWalletTokenBalance()
-  await openMarketModal(selectedMatch)
+    console.log('Compra on-chain:', signature)
 
-  betHintText.textContent = `Aposta enviada com sucesso. Hash: ${signature.slice(0, 10)}...`
-  betAmountInput.value = ''
-  confirmBetBtn.textContent = 'Confirmar aposta'
-  confirmBetBtn.disabled = true
+    await loadWalletTokenBalance()
+
+    targetHintText.textContent =
+      `Aposta enviada com sucesso. Hash: ${signature.slice(0, 10)}...`
+
+    targetAmountInput.value = ''
+    targetPayoutText.textContent = 'Retorno estimado: --'
+    targetConfirmBtn.textContent = 'Confirmar aposta'
+    targetConfirmBtn.disabled = true
+
+    if (resetSelection) {
+      resetSelection()
+    }
+  } catch (error) {
+    console.error('Erro ao comprar posição:', error)
+    targetHintText.textContent = error?.message || 'Erro ao enviar aposta.'
+    targetConfirmBtn.textContent = 'Confirmar aposta'
+    targetConfirmBtn.disabled = false
+  }
 }
 
 async function resolveMarketOnChain() {
@@ -1536,34 +1559,32 @@ async function loadWalletTokenBalance() {
 
 function createCard(match) {
   const card = document.createElement('div')
-  card.className = 'match-card'
-
-  const liveBadge =
-    match.status === 'IN_PLAY' || match.status === 'PAUSED'
-      ? '<span class="match-league">AO VIVO</span>'
-      : ''
-
-  const scoreHtml =
-    match.scoreA !== null && match.scoreB !== null
-      ? `<span class="match-time">${match.scoreA} x ${match.scoreB}</span>`
-      : ''
+  card.className = 'match-card inline-market-card'
 
   card.innerHTML = `
-    <div class="match-top">
-      <div class="match-info">
-        <span class="match-league">${match.league}</span>
-        ${liveBadge}
-        <strong class="match-title">${match.teamA} vs ${match.teamB}</strong>
-        <span class="match-time">${match.time}</span>
-        ${scoreHtml}
+    <div class="match-box inline-match-box">
+      <div class="match-league">${match.league}</div>
+
+      <div class="match-teams">
+        <div class="team-block">
+          <div class="team-badge">A</div>
+          <strong>${match.teamA}</strong>
+        </div>
+
+        <div class="match-versus">VS</div>
+
+        <div class="team-block">
+          <div class="team-badge">B</div>
+          <strong>${match.teamB}</strong>
+        </div>
       </div>
 
-      <button class="trade open-market-btn" type="button">Abrir</button>
+      <div class="match-time">${match.time}</div>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid inline-stats-grid">
       <div class="stat-box">
-        <span class="stat-label">${match.teamA}</span>
+        <span class="stat-label">Prob. Time A</span>
         <strong class="stat-value">${match.probA}</strong>
       </div>
 
@@ -1573,14 +1594,136 @@ function createCard(match) {
       </div>
 
       <div class="stat-box">
-        <span class="stat-label">${match.teamB}</span>
+        <span class="stat-label">Prob. Time B</span>
         <strong class="stat-value">${match.probB}</strong>
       </div>
     </div>
+
+    <label class="modal-label">Previsão</label>
+
+    <div class="market-question inline-market-question">
+      <div class="market-mini-status">
+        <span class="market-chip pending">ABERTO</span>
+        <span class="market-total">Escolha um lado</span>
+      </div>
+
+      <div class="market-mini-pools">
+        <span>A</span>
+        <span>E</span>
+        <span>B</span>
+      </div>
+    </div>
+
+    <div class="bet-panel">
+      <div class="bet-top">
+        <div class="selected-outcome-chip js-selected-outcome-chip">Selecione um lado</div>
+        <div class="estimated-payout-text js-estimated-payout-text">Retorno estimado: --</div>
+      </div>
+
+      <input
+        class="input bet-amount-input js-bet-amount-input"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="Digite o valor da aposta"
+      />
+
+      <div class="bet-hint-text js-bet-hint-text">
+        O retorno é uma estimativa com base no pool atual.
+      </div>
+    </div>
+
+    <div class="modal-footer inline-modal-footer">
+      <button class="trade js-pick-btn" data-outcome="HOME" type="button">${match.teamA}</button>
+      <button class="trade js-pick-btn" data-outcome="DRAW" type="button">Empate</button>
+      <button class="launch js-pick-btn" data-outcome="AWAY" type="button">${match.teamB}</button>
+    </div>
+
+    <button class="launch confirm-bet-btn js-confirm-bet-btn" type="button" disabled>
+      Confirmar aposta
+    </button>
   `
 
-  card.querySelector('.open-market-btn').addEventListener('click', async () => {
-    await openMarketModal(match)
+  const amountInputEl = card.querySelector('.js-bet-amount-input')
+  const hintEl = card.querySelector('.js-bet-hint-text')
+  const payoutEl = card.querySelector('.js-estimated-payout-text')
+  const outcomeChipEl = card.querySelector('.js-selected-outcome-chip')
+  const confirmBtn = card.querySelector('.js-confirm-bet-btn')
+  const pickButtons = [...card.querySelectorAll('.js-pick-btn')]
+
+  let localSelectedOutcome = null
+
+  function resetSelection() {
+    localSelectedOutcome = null
+    outcomeChipEl.textContent = 'Selecione um lado'
+    pickButtons.forEach((btn) => btn.classList.remove('active-pick'))
+  }
+
+  async function updateInlinePreview() {
+    if (!localSelectedOutcome) {
+      payoutEl.textContent = 'Retorno estimado: --'
+      confirmBtn.disabled = true
+      return
+    }
+
+    const amountValue = amountInputEl.value.trim()
+    const amount = Number(String(amountValue || 0).replace(',', '.'))
+
+    if (!amountValue || !Number.isFinite(amount) || amount <= 0) {
+      payoutEl.textContent = 'Retorno estimado: --'
+      confirmBtn.disabled = true
+      return
+    }
+
+    const { market } = await fetchMarketAccount(match)
+    const projected = getProjectedPayout(match, market, localSelectedOutcome, amount)
+
+    if (!projected) {
+      payoutEl.textContent = 'Retorno estimado: --'
+      confirmBtn.disabled = true
+      return
+    }
+
+    payoutEl.textContent = `Retorno estimado: ${formatUiNumber(projected.payout)} WALA`
+    hintEl.textContent = `Lucro base estimado: ${formatUiNumber(projected.profit)} WALA • pode mudar conforme novas apostas`
+    confirmBtn.disabled = false
+  }
+
+  pickButtons.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      localSelectedOutcome = btn.dataset.outcome
+
+      outcomeChipEl.textContent =
+        localSelectedOutcome === 'HOME'
+          ? match.teamA
+          : localSelectedOutcome === 'DRAW'
+            ? 'Empate'
+            : match.teamB
+
+      pickButtons.forEach((item) => {
+        item.classList.toggle('active-pick', item === btn)
+      })
+
+      await updateInlinePreview()
+    })
+  })
+
+  amountInputEl.addEventListener('input', updateInlinePreview)
+
+  confirmBtn.addEventListener('click', async () => {
+    if (!localSelectedOutcome) {
+      hintEl.textContent = 'Selecione Time A, Empate ou Time B.'
+      return
+    }
+
+    await buyPositionOnChain(localSelectedOutcome, {
+      match,
+      amountInputEl,
+      hintEl,
+      payoutEl,
+      confirmBtn,
+      resetSelection,
+    })
   })
 
   return card
