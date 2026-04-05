@@ -9,9 +9,12 @@ import {
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token'
 
-const walaPredictsIdl = JSON.parse(
-  fs.readFileSync(new URL('../../src/idl/wala_predicts.json', import.meta.url), 'utf8')
-)
+const walaPredictsIdlRaw = fs
+  .readFileSync(new URL('../../src/idl/wala_predicts.json', import.meta.url), 'utf8')
+  .replace(/^\uFEFF/, '')
+  .trim()
+
+const walaPredictsIdl = JSON.parse(walaPredictsIdlRaw)
 
 function env(name, fallback = '') {
   return process.env[name] || fallback
@@ -46,7 +49,8 @@ function validateConfig() {
 }
 
 function loadKeypairFromJson(secretJson) {
-  const secret = Uint8Array.from(JSON.parse(secretJson))
+  const cleanJson = String(secretJson || '').replace(/^\uFEFF/, '').trim()
+  const secret = Uint8Array.from(JSON.parse(cleanJson))
   return Keypair.fromSecretKey(secret)
 }
 
