@@ -1375,7 +1375,78 @@ h1,h2,h3,p,span,label,div,strong{
     width:220px;
     height:220px;
     border-radius:50%;
-    background:radial-gradient(circle, rgba(17, 27, 22, 0.12) 0%, rgba(37,255,138,0) 70%);
+    background:radial-gradient(circle, rgba(37,255,138,0.12) 0%, rgba(37,255,138,0) 70%);
+    pointer-events:none;
+  }
+
+  .card:first-of-type .title{
+    max-width:760px;
+  }
+
+  .card:first-of-type .wallet-subtitle{
+    max-width:780px;
+    font-size:15px;
+    line-height:1.65;
+  }
+
+  .card:first-of-type .input{
+    max-width:520px;
+    margin-top:4px;
+    background:rgba(9,13,20,0.92);
+    box-shadow:0 10px 24px rgba(0,0,0,0.16) inset;
+  }
+
+  .connect{
+    min-width:150px;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.01em;
+  }
+
+  .menu-btn{
+    width:24px;
+    margin-left:10px;
+  }
+
+  .menu-btn span{
+    height:2px;
+    margin:5px 0;
+    opacity:0.95;
+  }
+}@media (min-width:991px){
+  .topbar{
+    position:sticky;
+    top:18px;
+    z-index:40;
+    padding:14px 18px;
+    border-radius:18px;
+    background:rgba(10,13,20,0.78);
+    border:1px solid rgba(255,255,255,0.06);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:
+      0 14px 34px rgba(0,0,0,0.24),
+      0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+
+  .card:first-of-type{
+    position:relative;
+    overflow:hidden;
+    border-radius:26px;
+    padding:34px;
+    background:
+      linear-gradient(180deg, rgba(20,24,34,0.96) 0%, rgba(10,14,22,0.98) 100%);
+    box-shadow:
+      0 26px 60px rgba(0,0,0,0.34),
+      0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+
+  .card:first-of-type::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.03), transparent 38%);
     pointer-events:none;
   }
 
