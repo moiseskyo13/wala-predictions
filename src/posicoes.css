@@ -580,3 +580,57 @@ body{
   background:#000 !important;
   color-scheme:dark;
 }
+
+
+html,
+body,
+.container,
+.card,
+.summary-grid,
+.summary-box,
+.positions-grid,
+.position-card,
+.position-top,
+.position-info,
+.position-grid,
+.position-box,
+.position-actions,
+.empty-state,
+.wallet-menu,
+.side-menu,
+.custom-modal,
+.notice-modal-card,
+.notice-modal-body,
+.notice-modal-footer,
+button,
+a,
+h1,
+h2,
+h3,
+h4,
+p,
+span,
+strong,
+label,
+div{
+  user-select:none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+img,
+svg{
+  -webkit-user-drag:none;
+  user-drag:none;
+}
+
+::selection{
+  background:transparent;
+}
+
+a,
+button{
+  -webkit-tap-highlight-color:transparent;
+}
