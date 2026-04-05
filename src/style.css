@@ -915,3 +915,34 @@ h1,h2,h3,p,span,label,div,strong{
     min-height:42px;
   }
 }
+
+
+.inline-market-card .inline-market-question{
+  display:none !important;
+}
+
+.inline-market-card .selected-outcome-chip{
+  display:none !important;
+}
+
+.inline-market-card .bet-top{
+  justify-content:flex-end;
+  margin-bottom:10px;
+}
+
+.inline-market-card .estimated-payout-text{
+  width:100%;
+  text-align:left;
+}
+
+@media (max-width:480px){
+  .inline-market-card .bet-top{
+    align-items:flex-start;
+    justify-content:flex-start;
+  }
+
+  .inline-market-card .estimated-payout-text{
+    width:100%;
+    text-align:left;
+  }
+}
