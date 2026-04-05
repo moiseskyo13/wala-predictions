@@ -512,10 +512,13 @@ async function claimPositionDirect(positionItem) {
       return
     }
 
-    if (!positionItem.market?.status?.resolved) {
-      alert('A partida terminou, mas o mercado ainda não foi resolvido on-chain. Aguarde a resolução.')
-      return
-    }
+if (!positionItem.market?.status?.resolved) {
+  openClaimNoticeModal(
+    'Mercado não resolvido',
+    'A partida terminou, mas o mercado ainda não foi resolvido on-chain. Aguarde a resolução.'
+  )
+  return
+}
 
     if (!canClaimPosition(positionItem.position, positionItem.market)) {
       if (
@@ -591,13 +594,19 @@ async function claimPositionDirect(positionItem) {
       .preInstructions(preInstructions)
       .rpc()
 
-    alert(`Resgate concluído.\nHash: ${signature}`)
-    await loadWalletTokenBalance()
-    await loadPositions()
+openClaimNoticeModal(
+  'Resgate concluído',
+  `Seu resgate foi concluído com sucesso.\n\nHash: ${signature}`
+)
+await loadWalletTokenBalance()
+await loadPositions()
   } catch (error) {
-    console.error('Erro ao resgatar posição:', error)
-    alert(error?.message || 'Erro ao resgatar posição.')
-    await loadPositions()
+console.error('Erro ao resgatar posição:', error)
+openClaimNoticeModal(
+  'Erro ao resgatar',
+  error?.message || 'Erro ao resgatar posição.'
+)
+await loadPositions()
   } finally {
     if (button) {
       button.disabled = false
@@ -782,9 +791,12 @@ async function connectWallet() {
     const provider = getPhantomProvider()
 
     if (!provider) {
-      alert('Phantom não encontrada. Instale a extensão ou abra no navegador da Phantom.')
-      return
-    }
+  openClaimNoticeModal(
+    'Phantom não encontrada',
+    'Instale a extensão da Phantom ou abra no navegador da Phantom.'
+  )
+  return
+}
 
     setConnectButtonText('Conectando...')
 
@@ -806,7 +818,10 @@ async function connectWallet() {
     connectedPublicKey = null
     setDisconnectedUI()
     walletAddressText.textContent = 'Não conectada'
-    alert('Não foi possível conectar a Phantom.')
+    openClaimNoticeModal(
+  'Erro ao conectar',
+  'Não foi possível conectar a Phantom.'
+)
   }
 }
 
