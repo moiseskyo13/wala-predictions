@@ -18,17 +18,20 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // ===== CONFIG =====
-const RPC_URL = 'https://api.devnet.solana.com'
-const FOOTBALL_DATA_TOKEN = '8ed2c55323794e458eb6d4c7f97174fd'
+const RPC_URL = process.env.RPC_URL || 'https://api.devnet.solana.com'
+const FOOTBALL_DATA_TOKEN = process.env.FOOTBALL_DATA_TOKEN || ''
 const FOOTBALL_DATA_BASE = 'https://api.football-data.org/v4'
-const CHECK_EVERY_MS = 60_000
+const CHECK_EVERY_MS = Number(process.env.CHECK_EVERY_MS || 60_000)
 
-const WALA_TOKEN_MINT = 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2'
-const WALA_PREDICTS_PROGRAM_ID = 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur'
-const PROTOCOL_FEE_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
+const WALA_TOKEN_MINT =
+  process.env.WALA_TOKEN_MINT || 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2'
+const WALA_PREDICTS_PROGRAM_ID =
+  process.env.WALA_PREDICTS_PROGRAM_ID || 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur'
+const PROTOCOL_FEE_WALLET =
+  process.env.PROTOCOL_FEE_WALLET || '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
 
-// ajuste para o caminho real da sua keypair admin
-const ADMIN_KEYPAIR_PATH = 'C:/Users/User/.config/solana/id.json'
+const ADMIN_KEYPAIR_JSON = process.env.ADMIN_KEYPAIR_JSON || ''
+const ADMIN_KEYPAIR_PATH = process.env.ADMIN_KEYPAIR_PATH || ''
 // ==================
 
 const connection = new Connection(RPC_URL, 'confirmed')
@@ -66,6 +69,33 @@ function loadKeypair(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8')
   const secret = Uint8Array.from(JSON.parse(raw))
   return Keypair.fromSecretKey(secret)
+}
+
+function loadKeypairFromJson(secretJson) {
+  const secret = Uint8Array.from(JSON.parse(secretJson))
+  return Keypair.fromSecretKey(secret)
+}
+
+function getAdminKeypair() {
+  if (ADMIN_KEYPAIR_JSON) {
+    return loadKeypairFromJson(ADMIN_KEYPAIR_JSON)
+  }
+
+  if (ADMIN_KEYPAIR_PATH) {
+    return loadKeypair(ADMIN_KEYPAIR_PATH)
+  }
+
+  throw new Error('ADMIN_KEYPAIR_JSON ou ADMIN_KEYPAIR_PATH não configurado.')
+}
+
+function validateConfig() {
+  if (!FOOTBALL_DATA_TOKEN) {
+    throw new Error('FOOTBALL_DATA_TOKEN não configurado.')
+  }
+
+  if (!ADMIN_KEYPAIR_JSON && !ADMIN_KEYPAIR_PATH) {
+    throw new Error('ADMIN_KEYPAIR_JSON ou ADMIN_KEYPAIR_PATH não configurado.')
+  }
 }
 
 function getNodeWallet(keypair) {
@@ -171,8 +201,7 @@ async function ensureFeeRecipientAta(adminPubkey) {
   return { feeRecipientAta, preInstructions, tokenProgram }
 }
 
-async function resolveFinishedMarketsOnce() {
-  const adminKeypair = loadKeypair(ADMIN_KEYPAIR_PATH)
+async function resolveFinishedMarketsOnce(adminKeypair) {
   const provider = getProvider(adminKeypair)
   const program = getProgram(provider)
 
@@ -251,9 +280,17 @@ console.log(
 async function main() {
   console.log('[keeper] iniciado')
 
+  validateConfig()
+
+  const adminKeypair = getAdminKeypair()
+
+  console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
+  console.log('[keeper] rpc:', RPC_URL)
+  console.log('[keeper] intervalo ms:', CHECK_EVERY_MS)
+
   while (true) {
     try {
-      await resolveFinishedMarketsOnce()
+      await resolveFinishedMarketsOnce(adminKeypair)
     } catch (error) {
       console.error('[keeper] erro no loop principal:', error)
     }
