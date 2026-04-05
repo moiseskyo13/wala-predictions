@@ -14,9 +14,6 @@ const walaPredictsIdl = JSON.parse(
 )
 
 function env(name, fallback = '') {
-  if (globalThis.Netlify?.env?.get) {
-    return globalThis.Netlify.env.get(name) || fallback
-  }
   return process.env[name] || fallback
 }
 
@@ -253,25 +250,33 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
     } catch (error) {
       console.error(`[keeper] erro ao processar fixture ${fixtureId}:`, error)
       console.error('[keeper] error message:', error?.message)
+      console.error('[keeper] error stack:', error?.stack)
       console.error('[keeper] error logs:', error?.logs || error?.transactionLogs || error?.errorLogs)
+      console.error('[keeper] full error json:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
     }
   }
 }
 
 export default async (req) => {
   try {
+    console.log('[keeper] iniciou function')
     validateConfig()
 
     const payload = await req.json().catch(() => ({}))
-    console.log('[keeper] scheduled run. next_run:', payload?.next_run || 'manual')
+    console.log('[keeper] next_run:', payload?.next_run || 'manual')
+    console.log('[keeper] RPC_URL:', RPC_URL)
+    console.log('[keeper] WALA_TOKEN_MINT:', WALA_TOKEN_MINT)
+    console.log('[keeper] WALA_PREDICTS_PROGRAM_ID:', WALA_PREDICTS_PROGRAM_ID)
+    console.log('[keeper] PROTOCOL_FEE_WALLET:', PROTOCOL_FEE_WALLET)
+    console.log('[keeper] ADMIN_KEYPAIR_JSON exists:', !!ADMIN_KEYPAIR_JSON)
 
     const adminKeypair = loadKeypairFromJson(ADMIN_KEYPAIR_JSON)
 
     console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
-    console.log('[keeper] rpc:', RPC_URL)
 
     await resolveFinishedMarketsOnce(adminKeypair)
 
+    console.log('[keeper] finalizou sem erro')
     return new Response(null, { status: 200 })
   } catch (error) {
     console.error('[keeper] erro fatal:', error)
