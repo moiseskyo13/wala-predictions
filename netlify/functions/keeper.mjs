@@ -221,12 +221,19 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
         continue
       }
 
-      const [vaultPda] = deriveVaultPda(marketPda)
-      const { feeRecipientAta, preInstructions, tokenProgram } =
-        await ensureFeeRecipientAta(adminKeypair.publicKey)
+      const [vaultPda, vaultBump] = deriveVaultPda(marketPda)
+const { feeRecipientAta, preInstructions, tokenProgram } =
+  await ensureFeeRecipientAta(adminKeypair.publicKey)
 
-      const signature = await program.methods
-        .resolveMarket(outcomeArg(outcome))
+console.log('[keeper] market:', marketPda.toBase58())
+console.log('[keeper] market authority:', market.authority.toBase58())
+console.log('[keeper] keeper authority:', adminKeypair.publicKey.toBase58())
+console.log('[keeper] market vault_bump salvo:', market.vaultBump)
+console.log('[keeper] vault PDA derivado:', vaultPda.toBase58())
+console.log('[keeper] vault bump derivado:', vaultBump)
+
+const signature = await program.methods
+  .resolveMarket(outcomeArg(outcome))
         .accounts({
           authority: adminKeypair.publicKey,
           market: marketPda,
@@ -266,7 +273,18 @@ export default async (req) => {
 
     const adminKeypair = loadKeypairFromJson(ADMIN_KEYPAIR_JSON)
 
-    console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
+console.log('[keeper] admin wallet:', adminKeypair.publicKey.toBase58())
+
+const provider = getProvider(adminKeypair)
+const program = getProgram(provider)
+const markets = await program.account.marketAccount.all()
+
+for (const item of markets) {
+  console.log('[keeper] market pubkey:', item.publicKey.toBase58())
+  console.log('[keeper] market fixtureId:', Number(item.account.fixtureId))
+  console.log('[keeper] market authority:', item.account.authority.toBase58())
+  console.log('[keeper] market vault_bump:', item.account.vaultBump)
+}
 
 const adminInfo = await connection.getAccountInfo(adminKeypair.publicKey)
 console.log('[keeper] admin account owner:', adminInfo?.owner?.toBase58?.() || 'null')
