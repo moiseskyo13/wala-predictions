@@ -1390,3 +1390,67 @@ body{
     max-width:280px;
   }
 }
+
+.notice-modal-card{
+  width:100%;
+  max-width:360px;
+  margin-bottom:0;
+  position:relative;
+  z-index:1101;
+  padding:16px;
+  border-radius:18px;
+}
+
+.notice-modal-body{
+  padding:4px 0 10px;
+}
+
+.notice-modal-text{
+  color:#d7dde5;
+  font-size:14px;
+  line-height:1.55;
+}
+
+.notice-modal-footer{
+  margin-top:10px;
+}
+
+.notice-confirm-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  font-size:14px;
+  background:linear-gradient(90deg,#5cffb4,#25ff8a);
+  color:#000;
+  cursor:pointer;
+  transition:0.18s ease;
+}
+
+.notice-confirm-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(37,255,138,0.16);
+}
+
+.notice-confirm-btn:active{
+  transform:scale(0.99);
+}
+
+.notice-confirm-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+@media (max-width:480px){
+  .notice-modal-card{
+    max-width:100%;
+    padding:14px;
+    border-radius:16px;
+  }
+
+  .notice-modal-text{
+    font-size:13px;
+  }
+}

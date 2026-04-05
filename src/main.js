@@ -240,6 +240,29 @@ document.querySelector('#app').innerHTML = `
       </button>
     </div>
   </div>
+
+  <div id="appNoticeOverlay" class="overlay"></div>
+
+  <div id="appNoticeModal" class="custom-modal">
+    <div class="card modal-card notice-modal-card">
+      <div class="modal-header">
+        <h3 id="appNoticeTitle">Aviso</h3>
+        <button class="modal-close" id="closeAppNoticeBtn" type="button">✕</button>
+      </div>
+
+      <div class="notice-modal-body">
+        <p id="appNoticeText" class="notice-modal-text">
+          Mensagem do sistema
+        </p>
+      </div>
+
+      <div class="notice-modal-footer">
+        <button id="appNoticeConfirmBtn" class="notice-confirm-btn" type="button">
+          Entendi
+        </button>
+      </div>
+    </div>
+  </div>
 `
 
 let matches = []
@@ -287,6 +310,13 @@ const betAmountInput = document.getElementById('betAmountInput')
 const betHintText = document.getElementById('betHintText')
 const confirmBetBtn = document.getElementById('confirmBetBtn')
 const seedMarketBtn = document.getElementById('seedMarketBtn')
+
+const appNoticeOverlay = document.getElementById('appNoticeOverlay')
+const appNoticeModal = document.getElementById('appNoticeModal')
+const appNoticeTitle = document.getElementById('appNoticeTitle')
+const appNoticeText = document.getElementById('appNoticeText')
+const closeAppNoticeBtn = document.getElementById('closeAppNoticeBtn')
+const appNoticeConfirmBtn = document.getElementById('appNoticeConfirmBtn')
 
 function isBettableStatus(status) {
   return status === 'SCHEDULED' || status === 'TIMED'
@@ -667,12 +697,12 @@ const signature = await program.methods
 
 async function depositTreasuryOnChain() {
   if (!walletConnected) {
-    alert('Conecte a wallet admin antes de abastecer a treasury.')
+    showAppAlert('Conecte a wallet admin antes de abastecer a treasury.')
     return
   }
 
   if (!isAdminWallet()) {
-    alert('Apenas a wallet admin pode abastecer a treasury global.')
+    showAppAlert('Apenas a wallet admin pode abastecer a treasury global.')
     return
   }
 
@@ -683,12 +713,12 @@ async function depositTreasuryOnChain() {
   try {
     rawAmount = uiToRawAmount(amountValue)
   } catch (error) {
-    alert(error?.message || 'Valor inválido.')
+    showAppAlert(error?.message || 'Valor inválido.')
     return
   }
 
   if (rawAmount.lten(0)) {
-    alert('Valor inválido.')
+    showAppAlert('Valor inválido.')
     return
   }
 
@@ -721,10 +751,10 @@ async function depositTreasuryOnChain() {
     console.log('Deposit treasury on-chain:', signature)
 
     await loadWalletTokenBalance()
-    alert(`Treasury global abastecida com sucesso.\nHash: ${signature}`)
+    showAppAlert(`Treasury global abastecida com sucesso.\nHash: ${signature}`)
   } catch (error) {
     console.error('Erro ao abastecer treasury global:', error)
-    alert(error?.message || 'Erro ao abastecer treasury global.')
+    showAppAlert(error?.message || 'Erro ao abastecer treasury global.')
   }
 }
 
@@ -842,7 +872,7 @@ async function resolveMarketOnChain() {
   if (!selectedMatch) return
 
   if (selectedMatch.status !== 'FINISHED') {
-    alert('Esse mercado só pode ser resolvido após o fim do evento.')
+    showAppAlert('Esse mercado só pode ser resolvido após o fim do evento.')
     return
   }
 
@@ -853,7 +883,7 @@ async function resolveMarketOnChain() {
   if (!typed) return
   const outcome = typed.trim().toUpperCase()
   if (!['HOME', 'DRAW', 'AWAY'].includes(outcome)) {
-    alert('Use HOME, DRAW ou AWAY.')
+    showAppAlert('Use HOME, DRAW ou AWAY.')
     return
   }
 
@@ -861,7 +891,7 @@ async function resolveMarketOnChain() {
   const market = await program.account.marketAccount.fetchNullable(marketPda)
 
   if (!market) {
-    alert('Esse mercado ainda não existe on-chain.')
+    showAppAlert('Esse mercado ainda não existe on-chain.')
     return
   }
 
@@ -907,14 +937,14 @@ const signature = await program.methods
   console.log('Resolve on-chain:', signature)
 
   await openMarketModal(selectedMatch)
-  alert(`Mercado resolvido on-chain.\nHash: ${signature}`)
+  showAppAlert(`Mercado resolvido on-chain.\nHash: ${signature}`)
 }
 
 async function claimPositionOnChain() {
   if (!selectedMatch) return
 
   if (!walletConnected) {
-    alert('Conecte a wallet antes de resgatar.')
+    showAppAlert('Conecte a wallet antes de resgatar.')
     return
   }
 
@@ -925,7 +955,7 @@ async function claimPositionOnChain() {
   const market = await program.account.marketAccount.fetchNullable(marketPda)
 
   if (!market) {
-    alert('Mercado não encontrado on-chain.')
+    showAppAlert('Mercado não encontrado on-chain.')
     return
   }
 
@@ -934,7 +964,7 @@ async function claimPositionOnChain() {
   const treasury = await program.account.treasuryAccount.fetchNullable(treasuryPda)
 
   if (!treasury) {
-    alert('Treasury global ainda não foi criada pela admin.')
+    showAppAlert('Treasury global ainda não foi criada pela admin.')
     return
   }
 
@@ -989,7 +1019,7 @@ const signature = await program.methods
   await loadWalletTokenBalance()
   await openMarketModal(selectedMatch)
 
-  alert(`Resgate concluído on-chain.\nHash: ${signature}`)
+  showAppAlert(`Resgate concluído on-chain.\nHash: ${signature}`)
 }
 
 async function openMarketModal(match) {
@@ -1446,7 +1476,7 @@ function updateWalletBalanceUI(uiAmount = 0) {
 
 function openAddBalance() {
   closeWalletMenu()
-  alert('Aqui você vai abrir a conversão para WALA V2.')
+  showAppAlert('Aqui você vai abrir a conversão para WALA V2.')
 }
 
 function openSidebar() {
@@ -1475,12 +1505,31 @@ function closeMarketModal() {
   selectedMatch = null
 }
 
+function openAppNoticeModal(title, message) {
+  appNoticeTitle.textContent = title || 'Aviso'
+  appNoticeText.textContent = message || 'Mensagem não informada.'
+  appNoticeModal.classList.add('active')
+  appNoticeOverlay.classList.add('active')
+}
+
+function closeAppNoticeModal() {
+  appNoticeModal.classList.remove('active')
+  appNoticeOverlay.classList.remove('active')
+}
+
+function showAppAlert(message, title = 'Aviso') {
+  openAppNoticeModal(title, message)
+}
+
 async function connectWallet() {
   try {
     const provider = getPhantomProvider()
 
     if (!provider) {
-      alert('Phantom não encontrada. Instale a extensão ou abra no navegador da Phantom.')
+      showAppAlert(
+  'Phantom não encontrada. Instale a wallet ou abra o app no navegador da Phantom.',
+  'Wallet não encontrada'
+)
       return
     }
 
@@ -1503,8 +1552,10 @@ async function connectWallet() {
     connectedAddress = ''
     connectedPublicKey = null
     setDisconnectedUI()
-    alert('Não foi possível conectar a Phantom.')
-  }
+    showAppAlert(
+  'Não foi possível conectar a Phantom no momento.',
+  'Falha ao conectar'
+) }
 }
 
 async function disconnectWallet() {
@@ -1782,6 +1833,10 @@ walletOverlay.addEventListener('click', closeWalletMenu)
 
 closeModalBtn.addEventListener('click', closeMarketModal)
 marketModalOverlay.addEventListener('click', closeMarketModal)
+
+closeAppNoticeBtn.addEventListener('click', closeAppNoticeModal)
+appNoticeConfirmBtn.addEventListener('click', closeAppNoticeModal)
+appNoticeOverlay.addEventListener('click', closeAppNoticeModal)
 
 forecastABtn.addEventListener('click', () => {
   setSelectedOutcome('HOME')
