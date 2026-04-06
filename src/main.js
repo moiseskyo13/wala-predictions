@@ -30,7 +30,7 @@ async function detectWalaTokenProgram() {
   const mintInfo = await connection.getAccountInfo(walaMintPubkey)
 
   if (!mintInfo) {
-    throw new Error('Mint WALA não encontrada na rede.')
+    throw new Error('Mint vWALA não encontrada na rede.')
   }
 
   walaTokenProgramId = mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)
@@ -100,7 +100,7 @@ document.querySelector('#app').innerHTML = `
     </div>
 
     <div class="card">
-      <h1 class="title"><span class="wala-color">WALA</span> Predictions</h1>
+      <h1 class="title"><span class="wala-color">WALA</span> V-BETA</h1>
       <p class="wallet-subtitle">
         Mercados esportivos futebol.
       </p>
@@ -112,7 +112,7 @@ document.querySelector('#app').innerHTML = `
         </div>
 
         <div class="wallet-stat-box">
-          <span class="wallet-stat-label">Saldo WALA</span>
+          <span class="wallet-stat-label">Saldo vWala</span>
           <strong id="walletBalanceText" class="wallet-stat-value">0</strong>
         </div>
       </div>
@@ -613,10 +613,10 @@ async function updateBetPreview() {
   }
 
   estimatedPayoutText.textContent =
-    `Retorno estimado: ${formatUiNumber(projected.payout)} WALA`
+    `Retorno estimado: ${formatUiNumber(projected.payout)} vWALA`
 
   betHintText.textContent =
-    `Lucro base estimado: ${formatUiNumber(projected.profit)} WALA • pode mudar conforme novas apostas`
+    `Lucro base estimado: ${formatUiNumber(projected.profit)} vWALA • pode mudar conforme novas apostas`
 
   confirmBetBtn.disabled = false
 }
@@ -1108,7 +1108,7 @@ async function openMarketModal(match) {
     modalQuestion.innerHTML = `
       <div class="market-mini-status">
         <span class="market-chip ${statusClass}">${statusText}</span>
-        <span class="market-total">Pool ${total} WALA</span>
+        <span class="market-total">Pool ${total} vWALA</span>
       </div>
       <div class="market-mini-pools">
         <span>A ${home}</span>
@@ -1521,7 +1521,7 @@ function updateWalletBalanceUI(uiAmount = 0) {
   walletBalanceText.textContent = formatted
 
   if (walletConnected) {
-    setConnectButtonText(`${formatted} WALA`)
+    setConnectButtonText(`${formatted} vWALA `)
   }
 }
 
@@ -1698,7 +1698,7 @@ async function loadWalletTokenBalance() {
     const uiAmount = Number(balance?.value?.uiAmount || 0)
 
     updateWalletBalanceUI(uiAmount)
-    console.log('Saldo token WALA:', uiAmount)
+    console.log('Saldo token vWALA:', uiAmount)
   } catch (error) {
     console.error('Erro ao carregar saldo do token WALA:', error)
     updateWalletBalanceUI(0)
@@ -1832,8 +1832,8 @@ function createCard(match) {
       return
     }
 
-    payoutEl.textContent = `Retorno estimado: ${formatUiNumber(projected.payout)} WALA`
-    hintEl.textContent = `Lucro base estimado: ${formatUiNumber(projected.profit)} WALA • pode mudar conforme novas apostas`
+    payoutEl.textContent = `Retorno estimado: ${formatUiNumber(projected.payout)} vWALA`
+    hintEl.textContent = `Lucro base estimado: ${formatUiNumber(projected.profit)} vWALA • pode mudar conforme novas apostas`
     confirmBtn.disabled = false
   }
 

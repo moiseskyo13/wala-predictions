@@ -32,7 +32,7 @@ async function detectWalaTokenProgram() {
   const mintInfo = await connection.getAccountInfo(walaMintPubkey)
 
   if (!mintInfo) {
-    throw new Error('Mint WALA não encontrada na rede.')
+    throw new Error('Mint vWALA não encontrada na rede.')
   }
 
   walaTokenProgramId = mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)
@@ -116,7 +116,7 @@ document.querySelector('#app').innerHTML = `
         </div>
 
         <div class="summary-box">
-          <span class="summary-label">Saldo WALA</span>
+          <span class="summary-label">Saldo vWALA</span>
           <strong id="walletBalanceText" class="summary-value">0</strong>
         </div>
 
@@ -463,10 +463,10 @@ async function loadWalletTokenBalance() {
     })
 
     if (walletConnected) {
-      setConnectButtonText(`${formatUiNumber(uiAmount)} WALA`)
+      setConnectButtonText(`${formatUiNumber(uiAmount)} vWALA`)
     }
   } catch (error) {
-    console.error('Erro ao carregar saldo WALA:', error)
+    console.error('Erro ao carregar saldo vWALA:', error)
     walletBalanceText.textContent = '0'
   }
 }
@@ -649,7 +649,7 @@ function createPositionCard(item) {
 
       <div class="position-box">
         <span class="position-box-label">Valor da posição</span>
-        <strong class="position-box-value">${formatUiNumber(amountUi)} WALA</strong>
+        <strong class="position-box-value">${formatUiNumber(amountUi)} vWALA</strong>
       </div>
 
       <div class="position-box">
@@ -674,7 +674,7 @@ function createPositionCard(item) {
       </button>
 
       <button class="outline-btn" type="button" disabled>
-        Pago: ${formatUiNumber(claimedAmountUi)} WALA
+        Pago: ${formatUiNumber(claimedAmountUi)} vWALA
       </button>
     </div>
   `
