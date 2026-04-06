@@ -46,7 +46,12 @@ pub mod wala_predicts {
 let now = Clock::get()?.unix_timestamp;
 let resolver_wallet = Pubkey::from_str(RESOLVER_WALLET).unwrap();
 
+msg!("CREATE_MARKET signer authority: {}", ctx.accounts.authority.key());
+msg!("CREATE_MARKET resolver_wallet constante: {}", resolver_wallet);
+
 market.authority = resolver_wallet;
+
+msg!("CREATE_MARKET authority salva no market: {}", market.authority);
 market.wala_mint = ctx.accounts.wala_mint.key();
 market.fixture_id = fixture_id;
 market.league = league;
