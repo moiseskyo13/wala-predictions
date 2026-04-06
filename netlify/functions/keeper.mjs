@@ -127,9 +127,13 @@ async function footballDataGet(pathname) {
   return JSON.parse(text)
 }
 
-function deriveVaultPda(marketPda) {
-  return PublicKey.findProgramAddressSync(
-    [new TextEncoder().encode('vault'), marketPda.toBuffer()],
+function deriveVaultPdaFromMarket(marketPda, vaultBump) {
+  return PublicKey.createProgramAddressSync(
+    [
+      new TextEncoder().encode('vault'),
+      marketPda.toBuffer(),
+      Uint8Array.from([vaultBump]),
+    ],
     programId
   )
 }
@@ -221,7 +225,12 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
         continue
       }
 
-      const [vaultPda, vaultBump] = deriveVaultPda(marketPda)
+      const canonicalVault = PublicKey.findProgramAddressSync(
+  [new TextEncoder().encode('vault'), marketPda.toBuffer()],
+  programId
+)
+
+const vaultPda = deriveVaultPdaFromMarket(marketPda, market.vaultBump)
 const { feeRecipientAta, preInstructions, tokenProgram } =
   await ensureFeeRecipientAta(adminKeypair.publicKey)
 
@@ -229,19 +238,20 @@ console.log('[keeper] market:', marketPda.toBase58())
 console.log('[keeper] market authority:', market.authority.toBase58())
 console.log('[keeper] keeper authority:', adminKeypair.publicKey.toBase58())
 console.log('[keeper] market vault_bump salvo:', market.vaultBump)
-console.log('[keeper] vault PDA derivado:', vaultPda.toBase58())
-console.log('[keeper] vault bump derivado:', vaultBump)
+console.log('[keeper] vault PDA canonical:', canonicalVault[0].toBase58())
+console.log('[keeper] vault bump canonical:', canonicalVault[1])
+console.log('[keeper] vault PDA usando bump salvo:', vaultPda.toBase58())
 
 const signature = await program.methods
   .resolveMarket(outcomeArg(outcome))
-        .accounts({
-          authority: adminKeypair.publicKey,
-          market: marketPda,
-          vaultTokenAccount: vaultPda,
-          feeRecipientTokenAccount: feeRecipientAta,
-          walaMint: walaMintPubkey,
-          tokenProgram: tokenProgram,
-        })
+  .accounts({
+    authority: adminKeypair.publicKey,
+    market: marketPda,
+    vaultTokenAccount: vaultPda,
+    feeRecipientTokenAccount: feeRecipientAta,
+    walaMint: walaMintPubkey,
+    tokenProgram: tokenProgram,
+  })
         .preInstructions(preInstructions)
         .rpc()
 
