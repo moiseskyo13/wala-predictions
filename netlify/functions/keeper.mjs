@@ -2,11 +2,8 @@ import fs from 'fs'
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { AnchorProvider, Program } from '@anchor-lang/core'
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token'
 
 const walaPredictsIdlRaw = fs
@@ -27,14 +24,13 @@ const FOOTBALL_DATA_BASE = 'https://api.football-data.org/v4'
 
 const WALA_TOKEN_MINT = env('WALA_TOKEN_MINT', 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2')
 const WALA_PREDICTS_PROGRAM_ID = env('WALA_PREDICTS_PROGRAM_ID', 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur')
-const PROTOCOL_FEE_WALLET = env('PROTOCOL_FEE_WALLET', '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv')
 const ADMIN_KEYPAIR_JSON = env('ADMIN_KEYPAIR_JSON', '')
 // ==================
 
 const connection = new Connection(RPC_URL, 'confirmed')
 const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
-const protocolFeeWalletPubkey = new PublicKey(PROTOCOL_FEE_WALLET)
+
 const SYSTEM_PROGRAM_PUBKEY = new PublicKey('11111111111111111111111111111111')
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
@@ -165,34 +161,7 @@ function isMarketOpen(status) {
   return !!status?.open
 }
 
-async function ensureFeeRecipientAta(adminPubkey) {
-  const tokenProgram = await detectWalaTokenProgram()
 
-  const feeRecipientAta = await getAssociatedTokenAddress(
-    walaMintPubkey,
-    protocolFeeWalletPubkey,
-    false,
-    tokenProgram
-  )
-
-  const feeAtaInfo = await connection.getAccountInfo(feeRecipientAta)
-  const preInstructions = []
-
-  if (!feeAtaInfo) {
-    preInstructions.push(
-      createAssociatedTokenAccountInstruction(
-        adminPubkey,
-        feeRecipientAta,
-        protocolFeeWalletPubkey,
-        walaMintPubkey,
-        tokenProgram,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      )
-    )
-  }
-
-  return { feeRecipientAta, preInstructions, tokenProgram }
-}
 
 async function resolveFinishedMarketsOnce(adminKeypair) {
   const provider = getProvider(adminKeypair)
@@ -244,8 +213,7 @@ if (!vaultPda) {
   continue
 }
 
-const { feeRecipientAta, preInstructions, tokenProgram } =
-  await ensureFeeRecipientAta(adminKeypair.publicKey)
+const tokenProgram = await detectWalaTokenProgram()
 
 console.log('[keeper] market:', marketPda.toBase58())
 console.log('[keeper] market authority:', market.authority.toBase58())
@@ -261,12 +229,10 @@ const signature = await program.methods
     authority: adminKeypair.publicKey,
     market: marketPda,
     vaultTokenAccount: vaultPda,
-    feeRecipientTokenAccount: feeRecipientAta,
     walaMint: walaMintPubkey,
     tokenProgram: tokenProgram,
   })
-        .preInstructions(preInstructions)
-        .rpc()
+  .rpc()
 
       console.log(
         `[keeper] mercado ${fixtureId} resolvido como ${outcome} | tx: ${signature}`
@@ -291,7 +257,7 @@ export default async (req) => {
     console.log('[keeper] RPC_URL:', RPC_URL)
     console.log('[keeper] WALA_TOKEN_MINT:', WALA_TOKEN_MINT)
     console.log('[keeper] WALA_PREDICTS_PROGRAM_ID:', WALA_PREDICTS_PROGRAM_ID)
-    console.log('[keeper] PROTOCOL_FEE_WALLET:', PROTOCOL_FEE_WALLET)
+    
     console.log('[keeper] ADMIN_KEYPAIR_JSON exists:', !!ADMIN_KEYPAIR_JSON)
 
     const adminKeypair = loadKeypairFromJson(ADMIN_KEYPAIR_JSON)

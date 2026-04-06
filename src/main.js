@@ -15,14 +15,14 @@ const MAINNET_RPC = 'https://api.devnet.solana.com'
 const WALA_TOKEN_MINT = 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2'
 const WALA_DECIMALS = 9
 const WALA_PREDICTS_PROGRAM_ID = 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur'
-const PROTOCOL_FEE_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
-const ADMIN_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
-const DEFAULT_FEE_BPS = 300
+const TREASURY_ADMIN_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
+const MARKET_RESOLVER_WALLET = '8vUdvD6D1ndArPbEupajVhDSKRP4dQtTXJ3tnznVHGbs'
+const DEFAULT_FEE_BPS = 0
 
 const connection = new Connection(MAINNET_RPC, 'confirmed')
 const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
-const protocolFeeWalletPubkey = new PublicKey(PROTOCOL_FEE_WALLET)
+
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
 
@@ -622,7 +622,7 @@ async function updateBetPreview() {
 }
 
 function isAdminWallet() {
-  return walletConnected && connectedAddress === ADMIN_WALLET
+  return walletConnected && connectedAddress === TREASURY_ADMIN_WALLET
 }
 
 function setSelectedOutcome(outcome) {
@@ -949,31 +949,13 @@ async function resolveMarketOnChain() {
     return
   }
 
-  const tokenProgram = await detectWalaTokenProgram()
-
-const [vaultPda] = deriveVaultPda(marketPda)
-const feeRecipientAta = await getAssociatedTokenAddress(
-  walaMintPubkey,
-  protocolFeeWalletPubkey,
-  false,
-  tokenProgram
-)
-
-const preInstructions = []
-const feeAtaInfo = await connection.getAccountInfo(feeRecipientAta)
-
-if (!feeAtaInfo) {
-  preInstructions.push(
-    createAssociatedTokenAccountInstruction(
-      provider.wallet.publicKey,
-      feeRecipientAta,
-      protocolFeeWalletPubkey,
-      walaMintPubkey,
-      tokenProgram,
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    )
-  )
+  if (connectedAddress !== MARKET_RESOLVER_WALLET) {
+  showAppAlert('Apenas a carteira global do market pode resolver.')
+  return
 }
+
+const tokenProgram = await detectWalaTokenProgram()
+const [vaultPda] = deriveVaultPda(marketPda)
 
 const signature = await program.methods
   .resolveMarket(outcomeArg(outcome))
@@ -981,12 +963,10 @@ const signature = await program.methods
     authority: provider.wallet.publicKey,
     market: marketPda,
     vaultTokenAccount: vaultPda,
-    feeRecipientTokenAccount: feeRecipientAta,
     walaMint: walaMintPubkey,
     tokenProgram: tokenProgram,
   })
-    .preInstructions(preInstructions)
-    .rpc()
+  .rpc()
 
   console.log('Resolve on-chain:', signature)
 

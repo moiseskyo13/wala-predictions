@@ -7,9 +7,9 @@ use std::str::FromStr;
 
 declare_id!("hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur");
 
-const PROTOCOL_FEE_WALLET: &str = "8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv";
-const ADMIN_WALLET: &str = "8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv";
-const MAX_FEE_BPS: u16 = 1000; // 10%
+const TREASURY_ADMIN_WALLET: &str = "8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv";
+const RESOLVER_WALLET: &str = "8vUdvD6D1ndArPbEupajVhDSKRP4dQtTXJ3tnznVHGbs";
+const MAX_FEE_BPS: u16 = 0;
 
 #[program]
 pub mod wala_predicts {
@@ -43,37 +43,38 @@ pub mod wala_predicts {
     );
 
     let market = &mut ctx.accounts.market;
-    let now = Clock::get()?.unix_timestamp;
+let now = Clock::get()?.unix_timestamp;
+let resolver_wallet = Pubkey::from_str(RESOLVER_WALLET).unwrap();
 
-    market.authority = ctx.accounts.authority.key();
-    market.wala_mint = ctx.accounts.wala_mint.key();
-    market.fixture_id = fixture_id;
-    market.league = league;
-    market.team_a = team_a;
-    market.team_b = team_b;
-    market.status = MarketStatus::Open;
-    market.winning_outcome = None;
-    market.pool_home = 0;
-    market.pool_draw = 0;
-    market.pool_away = 0;
-    market.total_pool = 0;
+market.authority = resolver_wallet;
+market.wala_mint = ctx.accounts.wala_mint.key();
+market.fixture_id = fixture_id;
+market.league = league;
+market.team_a = team_a;
+market.team_b = team_b;
+market.status = MarketStatus::Open;
+market.winning_outcome = None;
+market.pool_home = 0;
+market.pool_draw = 0;
+market.pool_away = 0;
+market.total_pool = 0;
 
-    market.prob_home_bps = home_prob_bps;
-    market.prob_draw_bps = draw_prob_bps;
-    market.prob_away_bps = away_prob_bps;
+market.prob_home_bps = home_prob_bps;
+market.prob_draw_bps = draw_prob_bps;
+market.prob_away_bps = away_prob_bps;
 
-    market.fee_bps = fee_bps;
-    market.fee_amount = 0;
-    market.created_at = now;
-    market.resolved_at = 0;
-    market.bump = ctx.bumps.market;
-    market.vault_bump = ctx.bumps.vault_token_account;
-
+market.fee_bps = 0;
+market.fee_amount = 0;
+market.created_at = now;
+market.resolved_at = 0;
+market.bump = ctx.bumps.market;
+market.vault_bump = ctx.bumps.vault_token_account;
     Ok(())
 }
 
-    pub fn init_treasury(ctx: Context<InitTreasury>) -> Result<()> {
-        let admin_wallet = Pubkey::from_str(ADMIN_WALLET).unwrap();
+    pub fn init_treasury(ctx: Context<InitTreasury>) -> Result<()> 
+    {
+        let admin_wallet = Pubkey::from_str(TREASURY_ADMIN_WALLET).unwrap();
 
         require_keys_eq!(
             ctx.accounts.admin.key(),
@@ -113,7 +114,7 @@ pub mod wala_predicts {
     ) -> Result<()> {
         require!(amount > 0, PredictError::InvalidAmount);
 
-        let admin_wallet = Pubkey::from_str(ADMIN_WALLET).unwrap();
+        let admin_wallet = Pubkey::from_str(TREASURY_ADMIN_WALLET).unwrap();
 
         require_keys_eq!(
             ctx.accounts.admin.key(),
@@ -227,11 +228,13 @@ pub mod wala_predicts {
     pub fn close_market(ctx: Context<CloseMarket>) -> Result<()> {
     let market = &mut ctx.accounts.market;
 
-    require_keys_eq!(
-        market.authority,
-        ctx.accounts.authority.key(),
-        PredictError::Unauthorized
-    );
+    let resolver_wallet = Pubkey::from_str(RESOLVER_WALLET).unwrap();
+
+require_keys_eq!(
+    ctx.accounts.authority.key(),
+    resolver_wallet,
+    PredictError::Unauthorized
+);
 
     require!(
         market.status == MarketStatus::Open,
@@ -249,11 +252,13 @@ pub fn resolve_market(
 ) -> Result<()> {
         let market = &mut ctx.accounts.market;
 
-        require_keys_eq!(
-            market.authority,
-            ctx.accounts.authority.key(),
-            PredictError::Unauthorized
-        );
+        let resolver_wallet = Pubkey::from_str(RESOLVER_WALLET).unwrap();
+
+require_keys_eq!(
+    ctx.accounts.authority.key(),
+    resolver_wallet,
+    PredictError::Unauthorized
+);
         require!(
     market.status == MarketStatus::Open || market.status == MarketStatus::Closed,
     PredictError::MarketAlreadyResolved
@@ -261,18 +266,6 @@ pub fn resolve_market(
 
         let winning_pool = get_pool_for_outcome(market, &winning_outcome);
         require!(winning_pool > 0, PredictError::NoWinningLiquidity);
-
-        let protocol_wallet = Pubkey::from_str(PROTOCOL_FEE_WALLET).unwrap();
-        require_keys_eq!(
-            ctx.accounts.fee_recipient_token_account.owner,
-            protocol_wallet,
-            PredictError::InvalidFeeRecipient
-        );
-        require_keys_eq!(
-            ctx.accounts.fee_recipient_token_account.mint,
-            market.wala_mint,
-            PredictError::InvalidFeeRecipientMint
-        );
 
         let fee_amount: u64 = 0;
         market.status = MarketStatus::Resolved;
@@ -616,8 +609,7 @@ pub struct ResolveMarket<'info> {
     )]
     pub vault_token_account: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub fee_recipient_token_account: InterfaceAccount<'info, TokenAccount>,
+    
 
     #[account(address = market.wala_mint)]
     pub wala_mint: InterfaceAccount<'info, Mint>,

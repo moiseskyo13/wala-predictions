@@ -1,4 +1,4 @@
-﻿{
+{
   "address": "hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur",
   "metadata": {
     "name": "wala_predicts",
@@ -754,10 +754,6 @@
           }
         },
         {
-          "name": "fee_recipient_token_account",
-          "writable": true
-        },
-        {
           "name": "wala_mint"
         },
         {
@@ -826,27 +822,27 @@
     {
       "code": 6001,
       "name": "MarketAlreadyResolved",
-      "msg": "Mercado j├í resolvido."
+      "msg": "Mercado já resolvido."
     },
     {
       "code": 6002,
       "name": "MarketNotOpen",
-      "msg": "Mercado n├úo est├í aberto."
+      "msg": "Mercado não está aberto."
     },
     {
       "code": 6003,
       "name": "MarketNotResolved",
-      "msg": "Mercado ainda n├úo foi resolvido."
+      "msg": "Mercado ainda não foi resolvido."
     },
     {
       "code": 6004,
       "name": "InvalidAmount",
-      "msg": "Valor inv├ílido."
+      "msg": "Valor inválido."
     },
     {
       "code": 6005,
       "name": "InvalidPayout",
-      "msg": "Payout inv├ílido."
+      "msg": "Payout inválido."
     },
     {
       "code": 6006,
@@ -856,32 +852,32 @@
     {
       "code": 6007,
       "name": "NotWinner",
-      "msg": "Voc├¬ n├úo ├® vencedor nesse mercado."
+      "msg": "Você não é vencedor nesse mercado."
     },
     {
       "code": 6008,
       "name": "PositionAlreadyClaimed",
-      "msg": "A posi├º├úo j├í foi resgatada."
+      "msg": "A posição já foi resgatada."
     },
     {
       "code": 6009,
       "name": "OutcomeMismatch",
-      "msg": "Outcome diferente da posi├º├úo j├í existente."
+      "msg": "Outcome diferente da posição já existente."
     },
     {
       "code": 6010,
       "name": "InvalidPositionMarket",
-      "msg": "Position market inv├ílido."
+      "msg": "Position market inválido."
     },
     {
       "code": 6011,
       "name": "InvalidPositionOwner",
-      "msg": "Position owner inv├ílido."
+      "msg": "Position owner inválido."
     },
     {
       "code": 6012,
       "name": "Unauthorized",
-      "msg": "Carteira sem autoriza├º├úo."
+      "msg": "Carteira sem autorização."
     },
     {
       "code": 6013,
@@ -891,17 +887,17 @@
     {
       "code": 6014,
       "name": "InvalidFeeRecipient",
-      "msg": "Conta de fee inv├ílida."
+      "msg": "Conta de fee inválida."
     },
     {
       "code": 6015,
       "name": "InvalidFeeRecipientMint",
-      "msg": "Mint da conta de fee inv├ílido."
+      "msg": "Mint da conta de fee inválido."
     },
     {
       "code": 6016,
       "name": "MathOverflow",
-      "msg": "Overflow matem├ítico."
+      "msg": "Overflow matemático."
     },
     {
       "code": 6017,
@@ -916,17 +912,17 @@
     {
       "code": 6019,
       "name": "InvalidTreasuryAuthority",
-      "msg": "Authority da treasury inv├ílida."
+      "msg": "Authority da treasury inválida."
     },
     {
       "code": 6020,
       "name": "InvalidTreasuryMint",
-      "msg": "Mint da treasury inv├ílida."
+      "msg": "Mint da treasury inválida."
     },
     {
       "code": 6021,
       "name": "InvalidProbabilityConfig",
-      "msg": "Configura├º├úo de probabilidade inv├ílida."
+      "msg": "Configuração de probabilidade inválida."
     }
   ],
   "types": [
