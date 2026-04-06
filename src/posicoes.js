@@ -99,7 +99,7 @@ document.querySelector('#app').innerHTML = `
     <div class="card">
       <h1 class="title"><span class="wala-color">WALA</span> Minhas Posições</h1>
       <p class="wallet-subtitle">
-        Veja suas apostas, status do mercado e resgate quando vencer.
+        Veja suas posições, status do mercado e resgate quando disponível.
       </p>
     </div>
 
@@ -134,7 +134,7 @@ document.querySelector('#app').innerHTML = `
 
     <div class="card">
       <div class="section-head">
-        <h3>Minhas apostas</h3>
+        <h3>Minhas posições</h3>
         <span class="section-count" id="positionsCount">0</span>
       </div>
 
@@ -648,7 +648,7 @@ function createPositionCard(item) {
       </div>
 
       <div class="position-box">
-        <span class="position-box-label">Valor apostado</span>
+        <span class="position-box-label">Valor da posição</span>
         <strong class="position-box-value">${formatUiNumber(amountUi)} WALA</strong>
       </div>
 

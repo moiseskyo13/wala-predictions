@@ -217,7 +217,7 @@ document.querySelector('#app').innerHTML = `
           type="number"
           min="0"
           step="0.01"
-          placeholder="Digite o valor da aposta"
+          placeholder="Digite o valor da posição"
         />
 
         <div id="betHintText" class="bet-hint-text">
@@ -232,8 +232,8 @@ document.querySelector('#app').innerHTML = `
       </div>
 
       <button id="confirmBetBtn" class="launch confirm-bet-btn" type="button" disabled>
-        Confirmar aposta
-      </button>
+  Abrir posição
+</button>
 
       <button id="seedMarketBtn" class="connect confirm-bet-btn" type="button" style="display:none;">
         Injetar pool inicial
@@ -852,7 +852,7 @@ async function buyPositionOnChain(outcome, options = {}) {
 
   const amountInputValue = targetAmountInput.value.trim()
   if (!amountInputValue) {
-    targetHintText.textContent = 'Digite o valor da aposta.'
+    targetHintText.textContent = 'Digite o valor da posição.'
     return
   }
 
@@ -915,11 +915,11 @@ const signature = await program.methods
     await loadWalletTokenBalance()
 
     targetHintText.textContent =
-      `Aposta enviada com sucesso. Hash: ${signature.slice(0, 10)}...`
+      `Posição aberta com sucesso. Hash: ${signature.slice(0, 10)}...`
 
     targetAmountInput.value = ''
     targetPayoutText.textContent = 'Retorno estimado: --'
-    targetConfirmBtn.textContent = 'Confirmar aposta'
+    targetConfirmBtn.textContent = 'Abrir posição'
     targetConfirmBtn.disabled = true
 
     if (resetSelection) {
@@ -927,7 +927,7 @@ const signature = await program.methods
     }
   } catch (error) {
     console.error('Erro ao comprar posição:', error)
-    targetHintText.textContent = error?.message || 'Erro ao enviar aposta.'
+    targetHintText.textContent = error?.message || 'Erro ao abrir posição.'
     targetConfirmBtn.textContent = 'Confirmar aposta'
     targetConfirmBtn.disabled = false
   }
@@ -1137,7 +1137,7 @@ async function openMarketModal(match) {
   estimatedPayoutText.textContent = 'Retorno estimado: --'
   betHintText.textContent = 'O retorno é uma estimativa com base no pool atual.'
   betAmountInput.value = ''
-  confirmBetBtn.textContent = 'Confirmar aposta'
+  confirmBetBtn.textContent = 'Abrir posição'
   confirmBetBtn.disabled = true
 
   forecastABtn.classList.remove('active-pick')
@@ -1773,7 +1773,7 @@ function createCard(match) {
         type="number"
         min="0"
         step="0.01"
-        placeholder="Digite o valor da aposta"
+        placeholder="Digite o valor da posição"
       />
 
       <div class="bet-hint-text js-bet-hint-text">
@@ -1788,8 +1788,8 @@ function createCard(match) {
     </div>
 
     <button class="launch confirm-bet-btn js-confirm-bet-btn" type="button" disabled>
-      Confirmar aposta
-    </button>
+  Abrir posição
+</button>
   `
 
   const amountInputEl = card.querySelector('.js-bet-amount-input')
