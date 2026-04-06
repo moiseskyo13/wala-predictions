@@ -673,22 +673,30 @@ async function ensureMarketOnChain(match) {
   const [marketPda] = deriveMarketPda(match.fixtureId)
   const [vaultPda] = deriveVaultPda(marketPda)
 
+  console.log('[APOSTA DEBUG] wallet conectada:', provider.wallet.publicKey.toBase58())
+  console.log('[APOSTA DEBUG] fixtureId:', match.fixtureId)
+  console.log('[APOSTA DEBUG] marketPda:', marketPda.toBase58())
+  console.log('[APOSTA DEBUG] vaultPda:', vaultPda.toBase58())
+
   const existing = await program.account.marketAccount.fetchNullable(marketPda)
   if (existing) {
+    console.log('[APOSTA DEBUG] market já existia')
+    console.log('[APOSTA DEBUG] authority do market existente:', existing.authority.toBase58())
+    console.log('[APOSTA DEBUG] vault_bump do market existente:', existing.vaultBump)
     return { marketPda, vaultPda, market: existing }
   }
 
   const signature = await program.methods
-  .createMarket(
-    new BN(String(match.fixtureId)),
-    match.league,
-    match.teamA,
-    match.teamB,
-    DEFAULT_FEE_BPS,
-    percentTextToBps(match.probA),
-    percentTextToBps(match.probDraw),
-    percentTextToBps(match.probB)
-  )
+    .createMarket(
+      new BN(String(match.fixtureId)),
+      match.league,
+      match.teamA,
+      match.teamB,
+      DEFAULT_FEE_BPS,
+      percentTextToBps(match.probA),
+      percentTextToBps(match.probDraw),
+      percentTextToBps(match.probB)
+    )
     .accounts({
       authority: provider.wallet.publicKey,
       market: marketPda,
@@ -699,12 +707,14 @@ async function ensureMarketOnChain(match) {
     })
     .rpc()
 
-  console.log('Market criado on-chain:', signature)
+  console.log('[APOSTA DEBUG] market criado on-chain tx:', signature)
 
   const market = await program.account.marketAccount.fetch(marketPda)
+  console.log('[APOSTA DEBUG] authority do market criado:', market.authority.toBase58())
+  console.log('[APOSTA DEBUG] vault_bump do market criado:', market.vaultBump)
+
   return { marketPda, vaultPda, market }
 }
-
 async function ensureTreasuryOnChain() {
   const provider = getAnchorProvider()
   const program = getProgram(provider)
@@ -861,25 +871,32 @@ async function buyPositionOnChain(outcome, options = {}) {
 
     const tokenProgram = await detectWalaTokenProgram()
 
-    const { marketPda, vaultPda } = await ensureMarketOnChain(targetMatch)
+    const { marketPda, vaultPda, market } = await ensureMarketOnChain(targetMatch)
 
-    const couponId = Date.now()
+const couponId = Date.now()
 
-    const [positionPda] = derivePositionPda(
-      marketPda,
-      provider.wallet.publicKey,
-      couponId
-    )
+const [positionPda] = derivePositionPda(
+  marketPda,
+  provider.wallet.publicKey,
+  couponId
+)
 
-    const userWalaAta = await getAssociatedTokenAddress(
-      walaMintPubkey,
-      provider.wallet.publicKey,
-      false,
-      tokenProgram
-    )
+const userWalaAta = await getAssociatedTokenAddress(
+  walaMintPubkey,
+  provider.wallet.publicKey,
+  false,
+  tokenProgram
+)
 
-    const signature = await program.methods
-      .buyPosition(new BN(String(couponId)), outcomeArg(outcome), rawAmount)
+console.log('[APOSTA DEBUG] market authority antes da compra:', market.authority.toBase58())
+console.log('[APOSTA DEBUG] couponId:', couponId)
+console.log('[APOSTA DEBUG] positionPda:', positionPda.toBase58())
+console.log('[APOSTA DEBUG] userWalaAta:', userWalaAta.toBase58())
+console.log('[APOSTA DEBUG] rawAmount:', rawAmount.toString())
+console.log('[APOSTA DEBUG] outcome:', outcome)
+
+const signature = await program.methods
+  .buyPosition(new BN(String(couponId)), outcomeArg(outcome), rawAmount)
       .accounts({
         user: provider.wallet.publicKey,
         market: marketPda,
