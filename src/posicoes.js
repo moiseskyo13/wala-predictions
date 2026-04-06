@@ -16,6 +16,7 @@ const WALA_TOKEN_MINT = 'F9yVUCWxMHATrZD2dVWonSunJjWF1L8jbBfTfmHczgU2'
 const WALA_DECIMALS = 9
 const WALA_PREDICTS_PROGRAM_ID = 'hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur'
 const ADMIN_WALLET = '8no5SbdExQeUP6sULmvxuaUtbfrwXe41xDQftCNYbbgv'
+const RESOLVER_WALLET = '8vUdvD6D1ndArPbEupajVhDSKRP4dQtTXJ3tnznVHGbs'
 const FOOTBALL_DATA_TOKEN = '8ed2c55323794e458eb6d4c7f97174fd'
 const FOOTBALL_DATA_BASE = '/api/football-data/v4'
 
@@ -23,8 +24,7 @@ const connection = new Connection(MAINNET_RPC, 'confirmed')
 const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
 
-const POSITION_ACCOUNT_SIZE = 99
-const POSITION_USER_OFFSET = 40
+// filtro manual via Anchor para evitar erro de offset/dataSize
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
 
@@ -708,24 +708,16 @@ async function loadPositions() {
 
     const program = getProgram()
 
-const rawPositionAccounts = await connection.getProgramAccounts(programId, {
-  filters: [
-    { dataSize: POSITION_ACCOUNT_SIZE },
-    {
-      memcmp: {
-        offset: POSITION_USER_OFFSET,
-        bytes: connectedPublicKey.toBase58(),
-      },
-    },
-  ],
-})
+const allPositions = await program.account.positionAccount.all()
 
-const myPositions = await Promise.all(
-  rawPositionAccounts.map(async (item) => ({
-    publicKey: item.pubkey,
-    account: await program.account.positionAccount.fetch(item.pubkey),
-  }))
-)
+const myPositions = allPositions.filter((item) => {
+  const accountUser =
+    typeof item.account?.user?.toBase58 === 'function'
+      ? item.account.user.toBase58()
+      : String(item.account?.user || '')
+
+  return accountUser === connectedPublicKey.toBase58()
+})
 
     const marketCache = new Map()
     const enriched = []
@@ -749,7 +741,25 @@ const myPositions = await Promise.all(
 })
     }
 
-    enriched.sort((a, b) => {
+    const visiblePositions = enriched.filter((item) => {
+      const marketAuthority =
+        typeof item.market?.authority?.toBase58 === 'function'
+          ? item.market.authority.toBase58()
+          : String(item.market?.authority || '')
+
+      const positionUser =
+        typeof item.position?.user?.toBase58 === 'function'
+          ? item.position.user.toBase58()
+          : String(item.position?.user || '')
+
+      const isFromConnectedWallet = positionUser === connectedPublicKey.toBase58()
+      const isResolverMarket = marketAuthority === RESOLVER_WALLET
+      const isNotClaimed = item.position?.claimed !== true
+
+      return isFromConnectedWallet && isResolverMarket && isNotClaimed
+    })
+
+    visiblePositions.sort((a, b) => {
       if (canClaimPosition(a.position, a.market) && !canClaimPosition(b.position, b.market)) return -1
       if (!canClaimPosition(a.position, a.market) && canClaimPosition(b.position, b.market)) return 1
 
@@ -761,23 +771,23 @@ const myPositions = await Promise.all(
       return Number(b.market.createdAt || 0) - Number(a.market.createdAt || 0)
     })
 
-    currentPositions = enriched
+    currentPositions = visiblePositions
 
-    const claimableCount = enriched.filter((item) => canClaimPosition(item.position, item.market)).length
+    const claimableCount = visiblePositions.filter((item) => canClaimPosition(item.position, item.market)).length
 
-    summaryCount.textContent = String(enriched.length)
-    positionsCount.textContent = String(enriched.length)
-    totalPositionsText.textContent = String(enriched.length)
+    summaryCount.textContent = String(visiblePositions.length)
+    positionsCount.textContent = String(visiblePositions.length)
+    totalPositionsText.textContent = String(visiblePositions.length)
     claimablePositionsText.textContent = String(claimableCount)
 
-    if (enriched.length === 0) {
-      positionsEmpty.textContent = 'Nenhuma posição encontrada para esta wallet.'
+    if (visiblePositions.length === 0) {
+      positionsEmpty.textContent = 'Nenhuma posição visível encontrada para esta wallet.'
       positionsEmpty.classList.add('show')
       return
     }
 
     positionsEmpty.classList.remove('show')
-    enriched.forEach((item) => positionsGrid.appendChild(createPositionCard(item)))
+    visiblePositions.forEach((item) => positionsGrid.appendChild(createPositionCard(item)))
   } catch (error) {
     console.error('Erro ao carregar posições:', error)
     positionsGrid.innerHTML = ''
