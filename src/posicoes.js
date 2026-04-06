@@ -24,7 +24,7 @@ const connection = new Connection(MAINNET_RPC, 'confirmed')
 const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
 
-// filtro manual via Anchor para evitar erro de offset/dataSize
+// busca segura sem offset fixo
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
 
@@ -708,16 +708,31 @@ async function loadPositions() {
 
     const program = getProgram()
 
-const allPositions = await program.account.positionAccount.all()
+const rawProgramAccounts = await connection.getProgramAccounts(programId)
 
-const myPositions = allPositions.filter((item) => {
-  const accountUser =
-    typeof item.account?.user?.toBase58 === 'function'
-      ? item.account.user.toBase58()
-      : String(item.account?.user || '')
+const myPositions = []
 
-  return accountUser === connectedPublicKey.toBase58()
-})
+for (const item of rawProgramAccounts) {
+  try {
+    const account = await program.account.positionAccount.fetch(item.pubkey)
+
+    const accountUser =
+      typeof account?.user?.toBase58 === 'function'
+        ? account.user.toBase58()
+        : String(account?.user || '')
+
+    if (accountUser !== connectedPublicKey.toBase58()) {
+      continue
+    }
+
+    myPositions.push({
+      publicKey: item.pubkey,
+      account,
+    })
+  } catch {
+    // ignora contas que não são PositionAccount válidas
+  }
+}
 
     const marketCache = new Map()
     const enriched = []
