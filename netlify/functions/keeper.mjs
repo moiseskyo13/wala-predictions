@@ -32,6 +32,7 @@ const walaMintPubkey = new PublicKey(WALA_TOKEN_MINT)
 const programId = new PublicKey(WALA_PREDICTS_PROGRAM_ID)
 
 const SYSTEM_PROGRAM_PUBKEY = new PublicKey('11111111111111111111111111111111')
+const BLOCKED_FIXTURE_IDS = new Set([554838])
 
 let walaTokenProgramId = TOKEN_PROGRAM_ID
 
@@ -173,15 +174,35 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
   console.log(`[keeper] mercados abertos encontrados: ${openMarkets.length}`)
 
   for (const item of openMarkets) {
-    const marketPda = item.publicKey
-    const market = item.account
-    const fixtureId = Number(market.fixtureId)
+  const marketPda = item.publicKey
+  const market = item.account
+  const fixtureId = Number(market.fixtureId)
 
-    try {
-      const matchData = await footballDataGet(`/matches/${fixtureId}`)
-      const apiStatus = matchData?.status
+  if (BLOCKED_FIXTURE_IDS.has(fixtureId)) {
+    console.log(`[keeper] fixture ${fixtureId} ignorado manualmente`)
+    continue
+  }
 
-      console.log(`[keeper] fixture ${fixtureId} status API: ${apiStatus}`)
+  if (!market.authority.equals(adminKeypair.publicKey)) {
+    console.log(
+      `[keeper] fixture ${fixtureId} ignorado: authority diferente da wallet resolvedora`
+    )
+    continue
+  }
+
+  const vaultPda = deriveVaultPdaFromMarket(marketPda, market.vaultBump)
+  if (!vaultPda) {
+    console.log(
+      `[keeper] fixture ${fixtureId} ignorado: vault_bump inválido no estado on-chain`
+    )
+    continue
+  }
+
+  try {
+    const matchData = await footballDataGet(`/matches/${fixtureId}`)
+    const apiStatus = matchData?.status
+
+    console.log(`[keeper] fixture ${fixtureId} status API: ${apiStatus}`)
 
       if (apiStatus === 'IN_PLAY' || apiStatus === 'PAUSED') {
   console.log(
@@ -206,12 +227,7 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
   programId
 )
 
-const vaultPda = deriveVaultPdaFromMarket(marketPda, market.vaultBump)
 
-if (!vaultPda) {
-  console.error(`[keeper] market ${fixtureId} ignorado: vault_bump inválido no estado on-chain`)
-  continue
-}
 
 const tokenProgram = await detectWalaTokenProgram()
 
@@ -238,12 +254,17 @@ const signature = await program.methods
         `[keeper] mercado ${fixtureId} resolvido como ${outcome} | tx: ${signature}`
       )
     } catch (error) {
-      console.error(`[keeper] erro ao processar fixture ${fixtureId}:`, error)
-      console.error('[keeper] error message:', error?.message)
-      console.error('[keeper] error stack:', error?.stack)
-      console.error('[keeper] error logs:', error?.logs || error?.transactionLogs || error?.errorLogs)
-      console.error('[keeper] full error json:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-    }
+  console.error(`[keeper] erro ao processar fixture ${fixtureId}:`, error)
+  console.error('[keeper] error message:', error?.message)
+  console.error('[keeper] error stack:', error?.stack)
+  console.error('[keeper] error logs:', error?.logs || error?.transactionLogs || error?.errorLogs)
+  console.error('[keeper] full error json:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+
+  if (String(error?.message || '').includes('football-data 429')) {
+    console.log('[keeper] rate limit detectado, encerrando o loop deste ciclo')
+    break
+  }
+}
   }
 }
 
