@@ -9,8 +9,10 @@ skip-lint = false
 wala_predicts = "hiSmRhGDoLJj5iBzjKtsBENJ2xY3NhFGgYBmPC3cHur"
 
 [provider]
-cluster = "Devnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "anchor test"
+
+[hooks]
