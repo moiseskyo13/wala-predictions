@@ -128,14 +128,21 @@ async function footballDataGet(pathname) {
 }
 
 function deriveVaultPdaFromMarket(marketPda, vaultBump) {
-  return PublicKey.createProgramAddressSync(
-    [
-      new TextEncoder().encode('vault'),
-      marketPda.toBuffer(),
-      Uint8Array.from([vaultBump]),
-    ],
-    programId
-  )
+  try {
+    return PublicKey.createProgramAddressSync(
+      [
+        new TextEncoder().encode('vault'),
+        marketPda.toBuffer(),
+        Uint8Array.from([vaultBump]),
+      ],
+      programId
+    )
+  } catch (error) {
+    console.error('[keeper] vault_bump inválido para este market')
+    console.error('[keeper] market:', marketPda.toBase58())
+    console.error('[keeper] vault_bump salvo:', vaultBump)
+    return null
+  }
 }
 
 function outcomeArg(outcome) {
@@ -231,6 +238,12 @@ async function resolveFinishedMarketsOnce(adminKeypair) {
 )
 
 const vaultPda = deriveVaultPdaFromMarket(marketPda, market.vaultBump)
+
+if (!vaultPda) {
+  console.error(`[keeper] market ${fixtureId} ignorado: vault_bump inválido no estado on-chain`)
+  continue
+}
+
 const { feeRecipientAta, preInstructions, tokenProgram } =
   await ensureFeeRecipientAta(adminKeypair.publicKey)
 
